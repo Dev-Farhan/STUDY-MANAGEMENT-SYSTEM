@@ -1,23 +1,23 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router";
-import SignIn from "./pages/AuthPages/SignIn";
-import SignUp from "./pages/AuthPages/SignUp";
-import NotFound from "./pages/OtherPage/NotFound";
-import UserProfiles from "./pages/UserProfiles";
-import Videos from "./pages/UiElements/Videos";
-import Images from "./pages/UiElements/Images";
-import Alerts from "./pages/UiElements/Alerts";
-import Badges from "./pages/UiElements/Badges";
-import Avatars from "./pages/UiElements/Avatars";
-import Buttons from "./pages/UiElements/Buttons";
-import LineChart from "./pages/Charts/LineChart";
-import BarChart from "./pages/Charts/BarChart";
-import Calendar from "./pages/Calendar";
-import BasicTables from "./pages/Tables/BasicTables";
-import FormElements from "./pages/Forms/FormElements";
-import Blank from "./pages/Blank";
-import AppLayout from "./layout/AppLayout";
-import { ScrollToTop } from "./components/common/ScrollToTop";
-import Home from "./pages/Dashboard/Home";
+import SignIn from "./pages/AuthPages/SignIn.js";
+import SignUp from "./pages/AuthPages/SignUp.js";
+import NotFound from "./pages/OtherPage/NotFound.js";
+import UserProfiles from "./pages/UserProfiles.js";
+import Videos from "./pages/UiElements/Videos.js";
+import Images from "./pages/UiElements/Images.js";
+import Alerts from "./pages/UiElements/Alerts.js";
+import Badges from "./pages/UiElements/Badges.js";
+import Avatars from "./pages/UiElements/Avatars.js";
+import Buttons from "./pages/UiElements/Buttons.js";
+import LineChart from "./pages/Charts/LineChart.js";
+import BarChart from "./pages/Charts/BarChart.js";
+import Calendar from "./pages/Calendar.js";
+import BasicTables from "./pages/Tables/BasicTables.js";
+import FormElements from "./pages/Forms/FormElements.js";
+import Blank from "./pages/Blank.js";
+import AppLayout from "./layout/AppLayout.js";
+import { ScrollToTop } from "./components/common/ScrollToTop.js";
+import Home from "./pages/Dashboard/Home.js";
 import DepartmentList from "./pages/EmployeePage/department/list.jsx";
 import DepartmentAdd from "./pages/EmployeePage/department/add.jsx";
 import DepartmentEdit from "./pages/EmployeePage/department/edit.jsx";
@@ -43,7 +43,7 @@ export default function App() {
             <Route index path="/department/add" element={<DepartmentAdd />} />
             <Route
               index
-              path="/department/edit/:id"
+              path="/department/edit/:id  "
               element={<DepartmentEdit />}
             />
             <Route index path="/employees/add" element={<EmployeeAdd />} />
