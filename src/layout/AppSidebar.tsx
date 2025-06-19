@@ -9,7 +9,7 @@ import {
   UserCircleIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-
+import { BsFileBarGraph, BsFileBarGraphFill } from "react-icons/bs";
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -315,7 +315,12 @@ const AppSidebar: React.FC = () => {
                 width={150}
                 height={40}
               /> */}
-              STUDY MANAGEMENT SYSTEM
+              <span className="flex justify-center items-center gap-1 text-xl font-semibold text-gray-800 dark:hidden">
+                <BsFileBarGraph /> Nexsys
+              </span>
+              <span className="hidden dark:flex dark:items-center dark:justify-center gap-1 text-xl font-semibold dark:text-white ">
+                <BsFileBarGraphFill /> Nexsys
+              </span>
             </>
           ) : (
             // <img
@@ -324,7 +329,7 @@ const AppSidebar: React.FC = () => {
             //   width={32}
             //   height={32}
             // />
-            <>STUDY MANAGEMENT SYSTEM</>
+            <>N</>
           )}
         </Link>
       </div>

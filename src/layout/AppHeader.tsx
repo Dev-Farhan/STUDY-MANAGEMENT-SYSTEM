@@ -5,7 +5,7 @@ import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
-
+import { BsFileBarGraph, BsFileBarGraphFill } from "react-icons/bs";
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
@@ -94,7 +94,12 @@ const AppHeader: React.FC = () => {
               src="./images/logo/logo-dark.svg"
               alt="Logo"
             /> */}
-            STUDY MANAGEMENT SYSTEM
+            <span className="flex items-center justify-center gap-1 text-xl font-semibold text-gray-800 dark:hidden">
+              <BsFileBarGraph /> Nexsys
+            </span>
+            <span className="hidden dark:flex dark:items-center dark:justify-center gap-1 text-xl font-semibold dark:text-white ">
+              <BsFileBarGraphFill /> Nexsys
+            </span>
           </Link>
 
           <button
