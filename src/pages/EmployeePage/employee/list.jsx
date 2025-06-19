@@ -223,9 +223,9 @@ const EmployeeList = () => {
   ];
 
   const tableHeaders = [
-    "User",
+    "Name",
     "Contact No",
-    "Salary",
+    "Salary (INR)",
     "Department",
     "Students",
     "Status",
