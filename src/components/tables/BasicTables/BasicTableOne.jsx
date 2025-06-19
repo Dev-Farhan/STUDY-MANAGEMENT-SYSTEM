@@ -35,8 +35,6 @@ export default function BasicTableOne({
   editPath,
 }) {
   let navigate = useNavigate();
-  console.log("Table Data:", tableData);
-  console.log("Table Headers:", tableHeaders);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
