@@ -3,12 +3,15 @@ import NotFound from "./pages/OtherPage/NotFound.tsx";
 import AppLayout from "./layout/AppLayout.tsx";
 import { ScrollToTop } from "./components/common/ScrollToTop.tsx";
 import Home from "./pages/Dashboard/Home.tsx";
+import SignUp from "./pages/AuthPages/SignUp.tsx";
+import SignIn from "./pages/AuthPages/SignIn.tsx";
 import DepartmentList from "./pages/EmployeePage/department/list.jsx";
 import DepartmentAdd from "./pages/EmployeePage/department/add.jsx";
 import DepartmentEdit from "./pages/EmployeePage/department/edit.jsx";
 import EmployeeList from "./pages/EmployeePage/employee/list.jsx";
 import EmployeeAdd from "./pages/EmployeePage/employee/add.jsx";
 import EmployeeEdit from "./pages/EmployeePage/employee/edit.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 export default function App() {
   return (
@@ -17,7 +20,11 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
+            <Route  path="/sign-in" element={<SignIn />} />
+            <Route  path="/sign-up" element={<SignUp />} />
+          <Route element={  <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>}>
             <Route index path="/" element={<Home />} />
             <Route index path="/employees" element={<EmployeeList />} />
             <Route

@@ -4,10 +4,48 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
+import * as yup from "yup";
+import {  useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+
+const schema = yup.object().shape({
+  firstName: yup
+    .string()
+    .required("First name is required")
+    .min(3, "First name must be at least 3 characters")
+    .matches(/^[A-Za-z]{3,}$/, "First name must contain only letters and be at least 3 characters"),
+  lastName: yup
+    .string()
+    .required("Last name is required")
+    .min(3, "Last name must be at least 3 characters")
+    .matches(/^[A-Za-z]{3,}$/, "Last name must contain only letters and be at least 3 characters"),
+  email: yup
+    .string()
+    .email("Please enter a valid email")
+    .required("Email is required"),
+  password: yup
+    .string()
+    .required("Password is required")
+    .min(6, "Password must be at least 6 characters")
+});
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+
+const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(schema),
+  });
+
+  const onSubmit = (data: any) => {
+    console.log("Form Data:", data);
+  };
+
+
   return (
     <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
       <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
@@ -82,7 +120,7 @@ export default function SignUpForm() {
                 </span>
               </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit(onSubmit)}>
               <div className="space-y-5">
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   {/* <!-- First Name --> */}
@@ -93,8 +131,11 @@ export default function SignUpForm() {
                     <Input
                       type="text"
                       id="fname"
-                      name="fname"
+                  
                       placeholder="Enter your first name"
+                       {...register("firstName")}
+                    error={!!errors.firstName}
+                    hint={errors.firstName?.message}
                     />
                   </div>
                   {/* <!-- Last Name --> */}
@@ -105,8 +146,11 @@ export default function SignUpForm() {
                     <Input
                       type="text"
                       id="lname"
-                      name="lname"
+                     
                       placeholder="Enter your last name"
+                        {...register("lastName")}
+                    error={!!errors.lastName}
+                    hint={errors.lastName?.message}
                     />
                   </div>
                 </div>
@@ -118,8 +162,10 @@ export default function SignUpForm() {
                   <Input
                     type="email"
                     id="email"
-                    name="email"
                     placeholder="Enter your email"
+                     {...register("email")}
+                    error={!!errors.email}
+                    hint={errors.email?.message}
                   />
                 </div>
                 {/* <!-- Password --> */}
@@ -131,10 +177,16 @@ export default function SignUpForm() {
                     <Input
                       placeholder="Enter your password"
                       type={showPassword ? "text" : "password"}
+                      {...register("password")}
+                      error={!!errors.password}
+                      hint={errors.password?.message}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
+                      // className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
+                       className={`absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2 ${
+                        errors.password && "top-1/3"
+                      }`}
                     >
                       {showPassword ? (
                         <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
