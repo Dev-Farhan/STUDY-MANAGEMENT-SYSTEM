@@ -8,6 +8,7 @@ import {
   HorizontaLDots,
   PlugInIcon,
   UserCircleIcon,
+  TaskIcon
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { BsFileBarGraph, BsFileBarGraphFill } from "react-icons/bs";
@@ -37,6 +38,11 @@ const navItems: NavItem[] = [
   //   name: "User Profile",
   //   path: "/profile",
   // },
+  {
+    icon: <TaskIcon />,
+    name: "Courses",
+    path: "/courses",
+  },
   // {
   //   name: "Forms",
   //   icon: <ListIcon />,
@@ -78,14 +84,14 @@ const othersItems: NavItem[] = [
   //     { name: "Videos", path: "/videos", pro: false },
   //   ],
   // },
-  {
-    icon: <PlugInIcon />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
-    ],
-  },
+  // {
+  //   icon: <PlugInIcon />,
+  //   name: "Authentication",
+  //   subItems: [
+  //     { name: "Sign In", path: "/signin", pro: false },
+  //     { name: "Sign Up", path: "/signup", pro: false },
+  //   ],
+  // },
 ];
 
 const AppSidebar: React.FC = () => {

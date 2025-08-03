@@ -12,13 +12,17 @@ import EmployeeList from "./pages/EmployeePage/employee/list.jsx";
 import EmployeeAdd from "./pages/EmployeePage/employee/add.jsx";
 import EmployeeEdit from "./pages/EmployeePage/employee/edit.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-
+  import { ToastContainer,  } from 'react-toastify';
+import Course from "./pages/Courses/courses/index.jsx";
+import CourseAdd from "./pages/Courses/courses/add.jsx";
+import CourseEdit from "./pages/Courses/courses/edit.jsx";
 export default function App() {
   return (
     <>
       <Router>
         <ScrollToTop />
-        <Routes>
+        <ToastContainer className="!z-[10000]" position="bottom-right"/>
+        <Routes>  
           {/* Dashboard Layout */}
             <Route  path="/sign-in" element={<SignIn />} />
             <Route  path="/sign-up" element={<SignUp />} />
@@ -26,6 +30,10 @@ export default function App() {
               <AppLayout />
             </ProtectedRoute>}>
             <Route index path="/" element={<Home />} />
+            <Route index path="/courses" element={<Course />} />
+            <Route index path="/courses/add" element={<CourseAdd />} />
+            <Route index path="/courses/edit/:id" element={<CourseEdit />} />
+
             <Route index path="/employees" element={<EmployeeList />} />
             <Route
               index

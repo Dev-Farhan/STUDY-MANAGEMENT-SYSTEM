@@ -6,18 +6,58 @@ import Select from "../Select";
 import DatePicker from "../date-picker.tsx";
 import TextArea from "../input/TextArea.tsx";
 import Button from "../../ui/button/Button";
+import * as yup from "yup";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+// import Supabase from "../../config/supabaseClient.js";
+// import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
+
+const schema = yup.object().shape({
+  email: yup
+    .string()
+    .email("Please enter a valid email")
+    .required("Email is required"),
+  password: yup
+    .string()
+    .required("Password is required")
+    .min(6, "Password must be at least 6 characters")
+});
+
 export default function DynamicFields({ fields, btntitle = "Add" }) {
   let navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
-  const options = [
-    { value: "marketing", label: "Marketing" },
-    { value: "template", label: "Template" },
-    { value: "development", label: "Development" },
-  ];
+
+ const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(schema),
+  });
+
+  // const onSubmit = async (formData: any) => {
+  //   try {
+  //     const { email,password } = formData
+  //     let { data, error } = await Supabase.auth.signInWithPassword({
+  //       email, password
+  //     })
+  //     if (error) {
+  //       toast.error(error?.message);
+  //       console.error("Signin Error:", error.message);
+  //       return;
+  //     }
+  //     reset();
+  //     toast.success("User login succesfully");
+  //     navigate("/");
+  //   } catch (err: any) {
+  //     toast.error(err?.message);
+  //     }
+  // };
 
   return (
-    <ComponentCard title="Fill employee details">
+    <ComponentCard title="Fill details">
+        <form>
       <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
         {fields.map((field, index) => (
           <div>
@@ -27,6 +67,9 @@ export default function DynamicFields({ fields, btntitle = "Add" }) {
                 <Input
                   type="text"
                   id="input"
+                   {...register(`${field.label.toLowerCase()}`)}
+                      error={!!errors.email}
+                      hint={errors.email?.message}
                   placeholder={`Enter ${field.label.toLowerCase()}`}
                 />
               </>
@@ -77,12 +120,12 @@ export default function DynamicFields({ fields, btntitle = "Add" }) {
             )}
             {field.type === "textarea" && (
               <>
-                <Label>Address</Label>
+                <Label>{field.label}</Label>
                 <TextArea
                   value={""}
                   onChange={(value) => {}}
                   rows={6}
-                  placeholder="Enter address"
+               placeholder={` ${field.placeholder}`}
                 />
               </>
             )}
@@ -102,6 +145,7 @@ export default function DynamicFields({ fields, btntitle = "Add" }) {
           {btntitle}
         </Button>
       </div>
+      </form>
     </ComponentCard>
   );
 }

@@ -1,24 +1,32 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import * as yup from "yup";
-import {  useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import Supabase from "../../config/supabaseClient.js";
+import { toast } from "react-toastify";
 
 const schema = yup.object().shape({
   firstName: yup
     .string()
-    .required("First name is required")
+    // .required("First name is required")
     .min(3, "First name must be at least 3 characters")
-    .matches(/^[A-Za-z]{3,}$/, "First name must contain only letters and be at least 3 characters"),
+    .matches(
+      /^[A-Za-z]{3,}$/,
+      "First name must contain only letters and be at least 3 characters"
+    ),
   lastName: yup
     .string()
-    .required("Last name is required")
+    // .required("Last name is required")
     .min(3, "Last name must be at least 3 characters")
-    .matches(/^[A-Za-z]{3,}$/, "Last name must contain only letters and be at least 3 characters"),
+    .matches(
+      /^[A-Za-z]{3,}$/,
+      "Last name must contain only letters and be at least 3 characters"
+    ),
   email: yup
     .string()
     .email("Please enter a valid email")
@@ -26,25 +34,49 @@ const schema = yup.object().shape({
   password: yup
     .string()
     .required("Password is required")
-    .min(6, "Password must be at least 6 characters")
+    .min(6, "Password must be at least 6 characters"),
 });
 
 export default function SignUpForm() {
+    const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
 
-const {
+  const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = (data: any) => {
-    console.log("Form Data:", data);
-  };
+  const onSubmit = async (formData: any) => {
+    try {
+      const { email, password, firstName, lastName } = formData;
 
+      const { data, error } = await Supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { firstName, lastName },
+        },
+      });
+
+      if (error) {
+        toast.error(error?.message);
+        console.error("Signup Error:", error.message);
+        return;
+      }
+
+      toast.success("User registered succesfully");
+      navigate('/sign-in')
+      console.log("Signup + DB insert success");
+    } catch (err: any) {
+      toast.error(err?.message);
+      console.error("Unexpected Error:", err.message);
+    }
+  };
 
   return (
     <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
@@ -131,11 +163,10 @@ const {
                     <Input
                       type="text"
                       id="fname"
-                  
                       placeholder="Enter your first name"
-                       {...register("firstName")}
-                    error={!!errors.firstName}
-                    hint={errors.firstName?.message}
+                      {...register("firstName")}
+                      error={!!errors.firstName}
+                      hint={errors.firstName?.message}
                     />
                   </div>
                   {/* <!-- Last Name --> */}
@@ -146,11 +177,10 @@ const {
                     <Input
                       type="text"
                       id="lname"
-                     
                       placeholder="Enter your last name"
-                        {...register("lastName")}
-                    error={!!errors.lastName}
-                    hint={errors.lastName?.message}
+                      {...register("lastName")}
+                      error={!!errors.lastName}
+                      hint={errors.lastName?.message}
                     />
                   </div>
                 </div>
@@ -163,7 +193,7 @@ const {
                     type="email"
                     id="email"
                     placeholder="Enter your email"
-                     {...register("email")}
+                    {...register("email")}
                     error={!!errors.email}
                     hint={errors.email?.message}
                   />
@@ -184,7 +214,7 @@ const {
                     <span
                       onClick={() => setShowPassword(!showPassword)}
                       // className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
-                       className={`absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2 ${
+                      className={`absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2 ${
                         errors.password && "top-1/3"
                       }`}
                     >
@@ -215,8 +245,11 @@ const {
                   </p>
                 </div>
                 {/* <!-- Button --> */}
+                
                 <div>
-                  <button className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
+                  <button disabled={!isChecked} className={`flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg shadow-theme-xs ${
+            isChecked ? 'bg-brand-500 hover:bg-brand-600' : 'bg-gray-400 cursor-not-allowed'
+          }`}>
                     Sign Up
                   </button>
                 </div>
@@ -227,7 +260,7 @@ const {
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
                 Already have an account? {""}
                 <Link
-                  to="/signin"
+                  to="/sign-in"
                   className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
                   Sign In

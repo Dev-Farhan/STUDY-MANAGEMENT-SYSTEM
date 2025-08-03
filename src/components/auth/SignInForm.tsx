@@ -6,8 +6,12 @@ import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
 import * as yup from "yup";
-import {  useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import Supabase from "../../config/supabaseClient.js";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router";
+
 
 const schema = yup.object().shape({
   email: yup
@@ -21,19 +25,37 @@ const schema = yup.object().shape({
 });
 
 export default function SignInForm() {
+  const navigate = useNavigate(); // ✅ Hook
+
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = (data: any) => {
-    console.log("Form Data:", data);
+  const onSubmit = async (formData: any) => {
+    try {
+      const { email,password } = formData
+      let { data, error } = await Supabase.auth.signInWithPassword({
+        email, password
+      })
+      if (error) {
+        toast.error(error?.message);
+        console.error("Signin Error:", error.message);
+        return;
+      }
+      reset();
+      toast.success("User login succesfully");
+      navigate("/");
+    } catch (err: any) {
+      toast.error(err?.message);
+      }
   };
 
   return (
@@ -119,9 +141,9 @@ export default function SignInForm() {
                   {/* <Input placeholder="info@gmail.com" {...register("email")}  /> */}
                   <Input
                     placeholder="Enter your email"
-                    {...register("email")}
-                    error={!!errors.email}
-                    hint={errors.email?.message}
+                      {...register("email")}
+                      error={!!errors.email}
+                      hint={errors.email?.message}
                   />
                 </div>
                 {/* <div>
@@ -161,9 +183,8 @@ export default function SignInForm() {
 
                     <span
                       onClick={() => setShowPassword(!showPassword)}
-                      className={`absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2 ${
-                        errors.password && "top-1/3"
-                      }`}
+                      className={`absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2 ${errors.password && "top-1/3"
+                        }`}
                     >
                       {showPassword ? (
                         <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" />

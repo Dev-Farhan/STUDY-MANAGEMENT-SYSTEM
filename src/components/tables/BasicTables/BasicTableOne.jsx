@@ -33,6 +33,7 @@ export default function BasicTableOne({
   tableHeaders,
   path,
   editPath,
+  isLoading
 }) {
   let navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -130,7 +131,7 @@ export default function BasicTableOne({
           </TableHeader>
 
           {/* Table Body */}
-          <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          {/* <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
             {paginatedData.map((order) => (
               <TableRow key={order.id}>
                 {order?.user?.name && (
@@ -193,7 +194,7 @@ export default function BasicTableOne({
                   </TableCell>
                 )}
                 {/* {order.status} */}
-                {order?.status && (
+                {/* {order?.status && (
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <Switch
                       label=""
@@ -215,7 +216,111 @@ export default function BasicTableOne({
                 </TableCell>
               </TableRow>
             ))}
-          </TableBody>
+          </TableBody> */} 
+          <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+  {isLoading ? (
+    // Render 5 skeleton rows
+    Array.from({ length: 5 }).map((_, index) => (
+      <TableRow key={index}>
+        {[...Array(6)].map((_, cellIndex) => (
+          <TableCell key={cellIndex} className="px-4 py-4">
+            <div className="h-4 bg-gray-200 rounded dark:bg-gray-700 animate-pulse w-full"></div>
+          </TableCell>
+        ))}
+      </TableRow>
+    ))
+  ) : (
+    paginatedData.map((order) => (
+      <TableRow key={order.id}>
+        {paginatedData.map((order) => (
+              <TableRow key={order.id}>
+                {order?.user?.name && (
+                  <TableCell className="px-5 py-4 sm:px-6 text-start">
+                    <div className="flex items-center gap-3">
+                      {order?.user?.image && (
+                        <div className="w-10 h-10 overflow-hidden rounded-full">
+                          <img
+                            width={40}
+                            height={40}
+                            src={order.user.image}
+                            alt={order.user.name}
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                          {order?.user?.name}
+                        </span>
+                        <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
+                          {order?.user?.role}
+                        </span>
+                      </div>
+                    </div>
+                  </TableCell>
+                )}
+                {order?.projectName && (
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    {order?.projectName}
+                  </TableCell>
+                )}
+                {order?.budget && (
+                  <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                    {order?.budget}
+                  </TableCell>
+                )}
+                {order?.department && (
+                  <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                    {order?.department}
+                  </TableCell>
+                )}
+                {order?.team?.images && order?.team?.images.length > 0 && (
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <div className="flex -space-x-2">
+                      {order.team.images.map((teamImage, index) => (
+                        <div
+                          key={index}
+                          className="w-6 h-6 overflow-hidden border-2 border-white rounded-full dark:border-gray-900"
+                        >
+                          <img
+                            width={24}
+                            height={24}
+                            src={teamImage}
+                            alt={`Team member ${index + 1}`}
+                            className="w-full size-6"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </TableCell>
+                )}
+                {/* {order.status} */}
+               {order?.status && (
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <Switch
+                      label=""
+                      defaultChecked={order.status === "Active" ? true : false}
+                    />
+                  </TableCell>
+                )}
+                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                  <span className="flex items-center gap-2">
+                    <MdOutlineEdit
+                      size={18}
+                      className="hover:text-gray-600"
+                      onClick={() => {
+                        navigate(`${editPath}/${order.id}`);
+                      }}
+                    />
+                    <MdOutlineDelete size={18} className="hover:text-red-600" />
+                  </span>
+                </TableCell>
+              </TableRow>
+            ))}
+      </TableRow>
+    ))
+  )}
+</TableBody>
+
           <TableFooter className="border-t border-gray-100 dark:border-white/[0.05]">
             <TableRow>
               <TableCell
