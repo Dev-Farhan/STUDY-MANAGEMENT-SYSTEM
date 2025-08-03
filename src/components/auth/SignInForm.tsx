@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
-import Label from "../form/Label";
-import Input from "../form/input/InputField";
-import Checkbox from "../form/input/Checkbox";
-import Button from "../ui/button/Button";
+import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons/index.js";
+import Label from "../form/Label.js";
+import Input from "../form/input/InputField.js";
+import Checkbox from "../form/input/Checkbox.js";
+import Button from "../ui/button/Button.js";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Supabase from "../../config/supabaseClient.js";
+// import Supabase from "@config/supabaseClient";
+import  Supabase  from "../../config/supabaseClient.ts";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
-
 
 const schema = yup.object().shape({
   email: yup
@@ -21,7 +21,7 @@ const schema = yup.object().shape({
   password: yup
     .string()
     .required("Password is required")
-    .min(6, "Password must be at least 6 characters")
+    .min(6, "Password must be at least 6 characters"),
 });
 
 export default function SignInForm() {
@@ -41,10 +41,11 @@ export default function SignInForm() {
 
   const onSubmit = async (formData: any) => {
     try {
-      const { email,password } = formData
-      let { data, error } = await Supabase.auth.signInWithPassword({
-        email, password
-      })
+      const { email, password } = formData;
+      let { error } = await Supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       if (error) {
         toast.error(error?.message);
         console.error("Signin Error:", error.message);
@@ -55,7 +56,7 @@ export default function SignInForm() {
       navigate("/");
     } catch (err: any) {
       toast.error(err?.message);
-      }
+    }
   };
 
   return (
@@ -141,9 +142,9 @@ export default function SignInForm() {
                   {/* <Input placeholder="info@gmail.com" {...register("email")}  /> */}
                   <Input
                     placeholder="Enter your email"
-                      {...register("email")}
-                      error={!!errors.email}
-                      hint={errors.email?.message}
+                    {...register("email")}
+                    error={!!errors.email}
+                    hint={errors.email?.message}
                   />
                 </div>
                 {/* <div>
@@ -183,8 +184,9 @@ export default function SignInForm() {
 
                     <span
                       onClick={() => setShowPassword(!showPassword)}
-                      className={`absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2 ${errors.password && "top-1/3"
-                        }`}
+                      className={`absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2 ${
+                        errors.password && "top-1/3"
+                      }`}
                     >
                       {showPassword ? (
                         <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" />

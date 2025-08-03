@@ -6,7 +6,6 @@ import {
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
-  PlugInIcon,
   UserCircleIcon,
   TaskIcon
 } from "../icons";

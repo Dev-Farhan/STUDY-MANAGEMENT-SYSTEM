@@ -7,7 +7,7 @@ import Checkbox from "../form/input/Checkbox";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Supabase from "../../config/supabaseClient.js";
+import  Supabase  from "../../config/supabaseClient.ts";
 import { toast } from "react-toastify";
 
 const schema = yup.object().shape({
@@ -45,7 +45,6 @@ export default function SignUpForm() {
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
@@ -55,7 +54,7 @@ export default function SignUpForm() {
     try {
       const { email, password, firstName, lastName } = formData;
 
-      const { data, error } = await Supabase.auth.signUp({
+      const { error } = await Supabase.auth.signUp({
         email,
         password,
         options: {

@@ -3,5 +3,14 @@
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
-  ]
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@config/*": ["src/config/*"]
+    },
+     "moduleResolution": "Node",
+    "allowJs": true,
+    "resolveJsonModule": true
+  }
 }
