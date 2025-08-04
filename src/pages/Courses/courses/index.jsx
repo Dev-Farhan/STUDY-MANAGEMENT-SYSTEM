@@ -1,4 +1,4 @@
-import { useEffect, useState,useCallback  } from "react";
+import { useEffect, useState, useCallback } from "react";
 import ComponentCard from "../../../components/common/ComponentCard";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import PageMeta from "../../../components/common/PageMeta";
@@ -20,7 +20,7 @@ import Switch from "../../../components/form/switch/Switch.js";
 import { useNavigate } from "react-router";
 import { Modal } from "../../../components/ui/modal/index.js";
 import { IoWarningOutline } from "react-icons/io5";
-import debounce from 'lodash/debounce';
+import debounce from "lodash/debounce";
 
 const Course = () => {
   let navigate = useNavigate();
@@ -38,7 +38,7 @@ const Course = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const rowsPerPage = 10;
 
@@ -47,45 +47,49 @@ const [isDeleting, setIsDeleting] = useState(false);
   let paginatedData = coursesData.slice(startIndex, endIndex);
   const totalPages = Math.ceil(coursesData.length / rowsPerPage);
 
-// Debounced fetch function
-const fetchCourses = async (query) => {
-  try {
-    let supabaseQuery = Supabase.from("courses").select("*");
+  // Debounced fetch function
+  const fetchCourses = async (query) => {
+        setIsLoading(true)
+    try {
+      let supabaseQuery = Supabase.from("courses").select("*");
 
-    if (query.trim() !== "") {
-      supabaseQuery = supabaseQuery.ilike("course_name", `%${query.trim()}%`);
+      if (query.trim() !== "") {
+        supabaseQuery = supabaseQuery.ilike("course_name", `%${query.trim()}%`);
+      }
+
+      const { data, error } = await supabaseQuery;
+
+      if (error) {
+        toast.error("Search error: " + error.message);
+        console.error("Supabase search error:", error);
+        return;
+      }
+
+      setCoursesData(data);
+          setIsLoading(false)
+    } catch (err) {
+      toast.error("Unexpected error during search");
+      console.error("Unexpected search error:", err);
+          setIsLoading(false)
     }
-
-    const { data, error } = await supabaseQuery;
-
-    if (error) {
-      toast.error("Search error: " + error.message);
-      console.error("Supabase search error:", error);
-      return;
-    }
-
-    setCoursesData(data);
-  } catch (err) {
-    toast.error("Unexpected error during search");
-    console.error("Unexpected search error:", err);
-  }
-};
-
-// Memoized debounced function (created once)
-const debouncedFetch = useCallback(debounce(fetchCourses, 1000), []);
-
-const handleSearchChange = (e) => {
-  const value = e.target.value;
-  setSearch(value);
-  setCurrentPage(1);
-  debouncedFetch(value); // calls the debounced fetch function
-};
-
-useEffect(() => {
-  return () => {
-    debouncedFetch.cancel();
   };
-}, [debouncedFetch]);
+
+  // Memoized debounced function (created once)
+  const debouncedFetch = useCallback(debounce(fetchCourses, 1000), []);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearch(value);
+    setCurrentPage(1);
+    debouncedFetch(value); // calls the debounced fetch function
+
+  };
+
+  useEffect(() => {
+    return () => {
+      debouncedFetch.cancel();
+    };
+  }, [debouncedFetch]);
 
   // const handleSearchChange = (e) => {
   //   // console.log('search',e)
@@ -119,29 +123,29 @@ useEffect(() => {
     }
   };
 
-const handleDelete = async (id) => {
-  setIsDeleting(true);
-  try {
-    const { error } = await Supabase.from("courses").delete().eq("id", id);
+  const handleDelete = async (id) => {
+    setIsDeleting(true);
+    try {
+      const { error } = await Supabase.from("courses").delete().eq("id", id);
 
-    if (error) {
-      toast.error(error.message);
-      console.error("Course Delete Error:", error.message);
-      return;
+      if (error) {
+        toast.error(error.message);
+        console.error("Course Delete Error:", error.message);
+        return;
+      }
+
+      await getCourses(); // wait for table refresh before closing modal
+
+      toast.success("Course record deleted successfully");
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong");
+      console.error("Unexpected Error:", err);
+    } finally {
+      setIsDeleting(false);
     }
-
-    await getCourses(); // wait for table refresh before closing modal
-
-    toast.success("Course record deleted successfully");
-    setIsDeleteModalOpen(false);
-    setItemToDelete(null);
-  } catch (err) {
-    toast.error(err?.message || "Something went wrong");
-    console.error("Unexpected Error:", err);
-  } finally {
-    setIsDeleting(false);
-  }
-};
+  };
 
   return (
     <>
@@ -310,9 +314,8 @@ const handleDelete = async (id) => {
               }}
               className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               disabled={isDeleting}
-
             >
-                {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? "Deleting..." : "Delete"}
             </button>
             <button
               onClick={() => setIsDeleteModalOpen(false)}
