@@ -16,6 +16,8 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Course from "./pages/Courses/courses/index.jsx";
 import CourseAdd from "./pages/Courses/courses/add.jsx";
 import CourseEdit from "./pages/Courses/courses/edit.jsx";
+import BranchList from "./pages/Branch/index.jsx";
+import BranchAdd from "./pages/Branch/add.jsx";
 export default function App() {
   return (
     <>
@@ -30,6 +32,12 @@ export default function App() {
               <AppLayout />
             </ProtectedRoute>}>
             <Route index path="/" element={<Home />} />
+
+            {/* branch routes  */}
+            <Route index path="/branch" element={<BranchList />} />
+            <Route index path="/branch/add" element={<BranchAdd />} />
+
+            {/* course routes  */}
             <Route index path="/courses" element={<Course />} />
             <Route index path="/courses/add" element={<CourseAdd />} />
             <Route index path="/courses/edit/:id" element={<CourseEdit />} />

@@ -7,10 +7,11 @@ import {
   GridIcon,
   HorizontaLDots,
   UserCircleIcon,
-  TaskIcon
+  TaskIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { BsFileBarGraph, BsFileBarGraphFill } from "react-icons/bs";
+import { IoGitBranchOutline } from "react-icons/io5";
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -23,6 +24,11 @@ const navItems: NavItem[] = [
     icon: <GridIcon />,
     name: "Dashboard",
     path: "/",
+  },
+    {
+    icon: <IoGitBranchOutline />,
+    name: "Branch",
+    path: "/branch",
   },
   {
     icon: <UserCircleIcon />,
@@ -42,6 +48,7 @@ const navItems: NavItem[] = [
     name: "Courses",
     path: "/courses",
   },
+ 
   // {
   //   name: "Forms",
   //   icon: <ListIcon />,
