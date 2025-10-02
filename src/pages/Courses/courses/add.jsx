@@ -4,7 +4,7 @@ import PageMeta from "../../../components/common/PageMeta";
 import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Supabase from "../../../config/supabaseClient.js";
+import Supabase from "../../../config/supabaseClient.ts";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import ComponentCard from "../../../components/common/ComponentCard.tsx";
@@ -57,20 +57,6 @@ export default function CourseAdd() {
 
   const onSubmit = async (formData) => {
     console.log("Form Data:", formData);
-    // const {
-    //   data: { user },
-    //   error: userError,
-    // } = await Supabase.auth.getUser();
-
-    // if (userError || !user) {
-    //   toast.error("User not authenticated.");
-    //   return;
-    // }
-
-    // const formDataWithUser = {
-    //   ...formData,
-    //   created_by: user.id,
-    // };
 
     try {
       const { data, error } = await Supabase.from("courses")
@@ -177,6 +163,7 @@ export default function CourseAdd() {
             </div>
             <div className="w-full  flex items-center justify-between gap-2 mt-4">
               <Button
+                type="button"
                 className="w-[10%] px-10 "
                 size="sm"
                 variant="outline"
@@ -184,7 +171,7 @@ export default function CourseAdd() {
               >
                 Cancel
               </Button>
-              <Button className="w-[10%] px-10" size="sm">
+              <Button type="submit" className="w-[10%] px-10" size="sm">
                 Add
               </Button>
             </div>

@@ -12,7 +12,7 @@ import EmployeeList from "./pages/EmployeePage/employee/list.jsx";
 import EmployeeAdd from "./pages/EmployeePage/employee/add.jsx";
 import EmployeeEdit from "./pages/EmployeePage/employee/edit.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-  import { ToastContainer,  } from 'react-toastify';
+import { ToastContainer } from "react-toastify";
 import Course from "./pages/Courses/courses/index.jsx";
 import CourseAdd from "./pages/Courses/courses/add.jsx";
 import CourseEdit from "./pages/Courses/courses/edit.jsx";
@@ -23,14 +23,18 @@ export default function App() {
     <>
       <Router>
         <ScrollToTop />
-        <ToastContainer className="!z-[10000]" position="bottom-right"/>
-        <Routes>  
+        <ToastContainer className="!z-[10000]" position="bottom-right" />
+        <Routes>
           {/* Dashboard Layout */}
-            <Route  path="/sign-in" element={<SignIn />} />
-            <Route  path="/sign-up" element={<SignUp />} />
-          <Route element={  <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>}>
+          <Route path="/sign-in" element={<SignIn />} />
+          <Route path="/sign-up" element={<SignUp />} />
+          <Route
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index path="/" element={<Home />} />
 
             {/* branch routes  */}
@@ -48,10 +52,14 @@ export default function App() {
               path="/employees/department"
               element={<DepartmentList />}
             />
-            <Route index path="/department/add" element={<DepartmentAdd />} />
             <Route
               index
-              path="/department/edit/:id  "
+              path="/employees/department/add"
+              element={<DepartmentAdd />}
+            />
+            <Route
+              index
+              path="/employees/department/edit/:id"
               element={<DepartmentEdit />}
             />
             <Route index path="/employees/add" element={<EmployeeAdd />} />

@@ -3,7 +3,7 @@ import ComponentCard from "../../../components/common/ComponentCard";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import PageMeta from "../../../components/common/PageMeta";
 import BasicTableOne from "../../../components/tables/BasicTables/BasicTableOne";
-import Supabase from "../../../config/supabaseClient.js";
+import Supabase from "../../../config/supabaseClient.ts";
 import { toast } from "react-toastify";
 import {
   Table,
@@ -13,24 +13,39 @@ import {
   TableHeader,
   TableRow,
 } from "../../../components/ui/table/index.js";
-import Button from "../../../components/ui/button/Button.js";
-import { MdOutlineDelete, MdOutlineEdit } from "react-icons/md";
-import Pagination from "../../../components/tables/BasicTables/Pagination.js";
 import Switch from "../../../components/form/switch/Switch.js";
 import { useNavigate } from "react-router";
 import { Modal } from "../../../components/ui/modal/index.js";
 import { IoWarningOutline } from "react-icons/io5";
 import debounce from "lodash/debounce";
+import CustomTable from "../../Tables/CustomTable.jsx";
+import { toggleCourseStatus } from "../../../utils/toggleUtils.js";
 
 const Course = () => {
   let navigate = useNavigate();
-  const tableHeaders = [
-    "Course Name",
-    "Course Code",
-    "Course Fee",
-    "Duration",
-    "Status",
-    "Actions",
+
+  const handleToggleStatus = (courseId, currentStatus) => {
+    toggleCourseStatus(courseId, currentStatus, setCoursesData, navigate);
+  };
+
+  const columns = [
+    { key: "course_name", label: "Course Name" },
+    { key: "course_code", label: "Code" },
+    { key: "fee", label: "Fee" },
+    { key: "duration", label: "Duration" },
+    {
+      key: "isActive",
+      label: "Active",
+      render: (value, row) => (
+        <Switch
+          label=""
+          checked={row.isActive || false}
+          onChange={() => {
+            handleToggleStatus(row.id, row.isActive);
+          }}
+        />
+      ),
+    },
   ];
   const [coursesData, setCoursesData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,7 +64,7 @@ const Course = () => {
 
   // Debounced fetch function
   const fetchCourses = async (query) => {
-        setIsLoading(true)
+    setIsLoading(true);
     try {
       let supabaseQuery = Supabase.from("courses").select("*");
 
@@ -66,11 +81,11 @@ const Course = () => {
       }
 
       setCoursesData(data);
-          setIsLoading(false)
+      setIsLoading(false);
     } catch (err) {
       toast.error("Unexpected error during search");
       console.error("Unexpected search error:", err);
-          setIsLoading(false)
+      setIsLoading(false);
     }
   };
 
@@ -82,7 +97,6 @@ const Course = () => {
     setSearch(value);
     setCurrentPage(1);
     debouncedFetch(value); // calls the debounced fetch function
-
   };
 
   useEffect(() => {
@@ -158,127 +172,26 @@ const Course = () => {
         <ComponentCard title="Courses List">
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
             <div className="max-w-full overflow-x-auto">
-              <Table>
-                {/* Table Header */}
-                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-                  <TableRow>
-                    <TableCell colSpan={7} className="px-5 py-3">
-                      <div className="flex items-center justify-between gap-3 p-4 border-b border-gray-200 dark:border-white/[0.05]">
-                        <input
-                          type="text"
-                          value={search}
-                          onChange={handleSearchChange}
-                          placeholder="Search..."
-                          className="border border-gray-400 px-3 py-2 rounded-md text-sm w-full max-w-xs dark:bg-[#1e2636] dark:text-white"
-                        />
-
-                        <Button
-                          size="sm"
-                          variant="primary"
-                          onClick={() => navigate(`/courses/add`)}
-                        >
-                          Add
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    {tableHeaders.map((header, index) => (
-                      <TableCell
-                        key={index}
-                        isHeader
-                        className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                      >
-                        {header}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                  {isLoading
-                    ? // Render 5 skeleton rows
-                      Array.from({ length: 5 }).map((_, index) => (
-                        <TableRow key={index}>
-                          {[...Array(6)].map((_, cellIndex) => (
-                            <TableCell key={cellIndex} className="px-4 py-4">
-                              <div className="h-4 bg-gray-200 rounded dark:bg-gray-700 animate-pulse w-full"></div>
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))
-                    : paginatedData.map((course) => (
-                        <TableRow key={course.id}>
-                          {course?.course_name && (
-                            <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                              {course?.course_name}
-                            </TableCell>
-                          )}
-                          {course?.course_code && (
-                            <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                              {course?.course_code}
-                            </TableCell>
-                          )}
-                          {course?.fee && (
-                            <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                              {course?.fee}
-                            </TableCell>
-                          )}
-                          {course?.duration && (
-                            <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                              {course?.duration}
-                            </TableCell>
-                          )}
-
-                          {course?.isActive && (
-                            <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                              <Switch
-                                label=""
-                                defaultChecked={course.isActive ? true : false}
-                                onChange={() => {}}
-                              />
-                            </TableCell>
-                          )}
-                          <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                            <span className="flex items-center gap-2">
-                              <MdOutlineEdit
-                                size={18}
-                                className="hover:text-gray-600"
-                                onClick={() => {
-                                  navigate(`/courses/edit/${course.id}`);
-                                }}
-                              />
-                              <MdOutlineDelete
-                                size={18}
-                                className="hover:text-red-600"
-                                onClick={() => {
-                                  setItemToDelete(course); // pass current item
-                                  setIsDeleteModalOpen(true);
-                                }}
-                              />
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                </TableBody>
-
-                <TableFooter className="border-t border-gray-100 dark:border-white/[0.05]">
-                  <TableRow>
-                    <TableCell
-                      colSpan={coursesData.length + 1}
-                      className="p-4 dark:text-white/90"
-                    >
-                      <div className="w-full flex justify-center items-center text-gray-500 dark:text-white/70">
-                        <Pagination
-                          currentPage={currentPage}
-                          totalPages={totalPages}
-                          onPageChange={setCurrentPage}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                </TableFooter>
-              </Table>
+              <CustomTable
+                columns={columns}
+                data={paginatedData}
+                loading={isLoading}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                onEdit={(course) => navigate(`/courses/edit/${course.id}`)}
+                onDelete={(course) => {
+                  setItemToDelete(course);
+                  setIsDeleteModalOpen(true);
+                }}
+                showSearch={true}
+                searchValue={search}
+                onSearchChange={handleSearchChange}
+                searchPlaceholder="Search courses..."
+                showAddButton={true}
+                addButtonText="Add Course"
+                onAddClick={() => navigate("/courses/add")}
+              />
             </div>
           </div>
         </ComponentCard>

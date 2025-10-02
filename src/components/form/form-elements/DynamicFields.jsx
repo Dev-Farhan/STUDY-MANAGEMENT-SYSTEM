@@ -9,7 +9,7 @@ import Button from "../../ui/button/Button";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-// import Supabase from "../../config/supabaseClient.js";
+// import Supabase from "../../config/supabaseClient.ts";
 // import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 

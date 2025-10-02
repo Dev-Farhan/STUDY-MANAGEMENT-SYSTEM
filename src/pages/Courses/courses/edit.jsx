@@ -4,7 +4,7 @@ import PageMeta from "../../../components/common/PageMeta";
 import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Supabase from "../../../config/supabaseClient.js";
+import Supabase from "../../../config/supabaseClient.ts";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router";
 import ComponentCard from "../../../components/common/ComponentCard.tsx";
@@ -84,30 +84,29 @@ export default function CourseEdit() {
     }
   };
 
- const onSubmit = async (formData) => {
-  console.log("Form Data:", formData);
-const {course_name,course_code,fee,duration,description} = formData
-  try {
-    const { data, error } = await Supabase
-      .from("courses") // ✅ only once
-      .update({course_name,course_code,fee,duration,description})
-      .eq("id", courseData.id) // ✅ make sure id is a number
-      .select(); // optional, returns updated rows
+  const onSubmit = async (formData) => {
+    console.log("Form Data:", formData);
+    const { course_name, course_code, fee, duration, description } = formData;
+    try {
+      const { data, error } = await Supabase.from("courses") // ✅ only once
+        .update({ course_name, course_code, fee, duration, description })
+        .eq("id", courseData.id) // ✅ make sure id is a number
+        .select(); // optional, returns updated rows
 
-    if (error) {
-      toast.error(error?.message);
-      console.error("Course Edit Error:", error.message);
-      return;
+      if (error) {
+        toast.error(error?.message);
+        console.error("Course Edit Error:", error.message);
+        return;
+      }
+
+      reset(); // resets form fields
+      toast.success("Course updated successfully!");
+      navigate("/courses"); // go back to list or table view
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong");
+      console.error("Unexpected Error:", err);
     }
-
-    reset(); // resets form fields
-    toast.success("Course updated successfully!");
-    navigate("/courses"); // go back to list or table view
-  } catch (err) {
-    toast.error(err?.message || "Something went wrong");
-    console.error("Unexpected Error:", err);
-  }
-};
+  };
 
   //   const onSubmit = () => {};
   return (
@@ -190,6 +189,7 @@ const {course_name,course_code,fee,duration,description} = formData
             </div>
             <div className="w-full  flex items-center justify-between gap-2 mt-4">
               <Button
+                type="button"
                 className="w-[10%] px-10 "
                 size="sm"
                 variant="outline"
@@ -197,8 +197,8 @@ const {course_name,course_code,fee,duration,description} = formData
               >
                 Cancel
               </Button>
-              <Button className="w-[10%] px-10" size="sm">
-         Edit
+              <Button type="submit" className="w-[10%] px-10" size="sm">
+                Edit
               </Button>
             </div>
           </form>

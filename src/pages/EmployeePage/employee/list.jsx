@@ -1,9 +1,16 @@
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import ComponentCard from "../../../components/common/ComponentCard";
 import PageMeta from "../../../components/common/PageMeta";
-import BasicTableOne from "../../../components/tables/BasicTables/BasicTableOne";
+import CustomTable from "../../Tables/CustomTable";
+import { useNavigate } from "react-router";
+import { useState } from "react";
 
 const EmployeeList = () => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+
   const tableData = [
     {
       id: 1,
@@ -222,15 +229,89 @@ const EmployeeList = () => {
     },
   ];
 
-  const tableHeaders = [
-    "Name",
-    "Contact No",
-    "Salary (INR)",
-    "Department",
-    "Students",
-    "Status",
-    "Actions",
+  const columns = [
+    {
+      key: "user",
+      label: "Name",
+      render: (user) => (
+        <div className="flex items-center gap-3">
+          <img
+            src={user.image}
+            alt={user.name}
+            className="w-10 h-10 rounded-full object-cover"
+          />
+          <div>
+            <p className="font-medium text-gray-900 dark:text-white">
+              {user.name}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {user.role}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    { key: "projectName", label: "Contact No" },
+    { key: "budget", label: "Salary (INR)" },
+    { key: "department", label: "Department" },
+    {
+      key: "team",
+      label: "Students",
+      render: (team) => (
+        <div className="flex -space-x-2">
+          {team.images.slice(0, 3).map((img, index) => (
+            <img
+              key={index}
+              src={img}
+              alt="Student"
+              className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800"
+            />
+          ))}
+          {team.images.length > 3 && (
+            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-white dark:border-gray-800 flex items-center justify-center text-xs font-medium text-gray-600 dark:text-gray-300">
+              +{team.images.length - 3}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (status) => (
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-medium ${
+            status === "Active"
+              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              : status === "Pending"
+              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+          }`}
+        >
+          {status}
+        </span>
+      ),
+    },
   ];
+
+  const rowsPerPage = 10;
+
+  // Filter data based on search
+  const filteredData = tableData.filter(
+    (item) =>
+      item.user.name.toLowerCase().includes(search.toLowerCase()) ||
+      item.department.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
 
   return (
     <>
@@ -241,11 +322,22 @@ const EmployeeList = () => {
       <PageBreadcrumb pageTitle="Employee List" />
       <div className="space-y-6">
         <ComponentCard title="Employee List">
-          <BasicTableOne
-            tableData={tableData}
-            tableHeaders={tableHeaders}
-            path="/employees/add"
-            editPath="/employees/edit"
+          <CustomTable
+            columns={columns}
+            data={paginatedData}
+            loading={isLoading}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            onEdit={(employee) => navigate(`/employees/edit/${employee.id}`)}
+            onDelete={(employee) => console.log("Delete employee:", employee)}
+            showSearch={true}
+            searchValue={search}
+            onSearchChange={handleSearchChange}
+            searchPlaceholder="Search employees..."
+            showAddButton={true}
+            addButtonText="Add Employee"
+            onAddClick={() => navigate("/employees/add")}
           />
         </ComponentCard>
       </div>
