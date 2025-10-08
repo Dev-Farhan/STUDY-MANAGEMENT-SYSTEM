@@ -101,7 +101,9 @@ const CustomTable = ({
                 {columns.map((col, colIndex) => (
                   <TableCell
                     key={colIndex}
-                    className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                    className={`px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 ${
+                      col.key === "img_url" ? "w-20" : ""
+                    }`}
                   >
                     {col.render ? col.render(row[col.key], row) : row[col.key]}
                   </TableCell>

@@ -11,20 +11,40 @@ import { Modal } from "../../../components/ui/modal/index.js";
 import { IoWarningOutline } from "react-icons/io5";
 import debounce from "lodash/debounce";
 import CustomTable from "../../Tables/CustomTable.jsx";
-import { toggleCourseStatus } from "../../../utils/toggleUtils.js";
+import { toggleProgramStatus } from "../../../utils/toggleUtils.js";
+import ImageCell from "../../../components/ui/table/ImageCell";
+import ImageModal from "../../../components/ui/modal/ImageModal";
 
-const Course = () => {
+const Programs = () => {
   let navigate = useNavigate();
 
-  const handleToggleStatus = (courseId, currentStatus) => {
-    toggleCourseStatus(courseId, currentStatus, setCoursesData, navigate);
+  const handleToggleStatus = (programId, currentStatus) => {
+    toggleProgramStatus(programId, currentStatus, setProgramsData, navigate);
   };
 
   const columns = [
-    { key: "course_name", label: "Course Name" },
-    { key: "course_code", label: "Code" },
-    { key: "fee", label: "Fee" },
-    { key: "duration", label: "Duration" },
+    { key: "program_name", label: "Program Name" },
+    { key: "description", label: "Description" },
+    {
+      key: "img_url",
+      label: "Program Photo",
+      render: (value, row) => (
+        <ImageCell
+          src={row.img_url}
+          alt={`${row.program_name} program image`}
+          size="md"
+          fallbackText="No Image"
+          clickable={!!row.img_url}
+          onClick={() => {
+            setSelectedImage({
+              src: row.img_url,
+              title: `${row.program_name} Program Image`,
+            });
+            setIsImageModalOpen(true);
+          }}
+        />
+      ),
+    },
     {
       key: "isActive",
       label: "Active",
@@ -39,29 +59,34 @@ const Course = () => {
       ),
     },
   ];
-  const [coursesData, setCoursesData] = useState([]);
+  const [programsData, setProgramsData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState({ src: null, title: "" });
 
   const rowsPerPage = 10;
 
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  let paginatedData = coursesData.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(coursesData.length / rowsPerPage);
+  let paginatedData = programsData.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(programsData.length / rowsPerPage);
 
   // Debounced fetch function
   const fetchCourses = async (query) => {
     setIsLoading(true);
     try {
-      let supabaseQuery = Supabase.from("courses").select("*");
+      let supabaseQuery = Supabase.from("programs").select("*");
 
       if (query.trim() !== "") {
-        supabaseQuery = supabaseQuery.ilike("course_name", `%${query.trim()}%`);
+        supabaseQuery = supabaseQuery.ilike(
+          "program_name",
+          `%${query.trim()}%`
+        );
       }
 
       const { data, error } = await supabaseQuery;
@@ -72,7 +97,7 @@ const Course = () => {
         return;
       }
 
-      setCoursesData(data);
+      setProgramsData(data);
       setIsLoading(false);
     } catch (err) {
       toast.error("Unexpected error during search");
@@ -101,7 +126,7 @@ const Course = () => {
   //   // console.log('search',e)
   //   const value = e.target.value;
   //   setSearch(value);
-  //   paginatedData = coursesData.filter(
+  //   paginatedData = programsData.filter(
   //     (course) => course.course_name.toLowerCase().includes(value.toLowerCase())
   //     // console.log(course.course_name.toLowerCase().includes(value.toLowerCase().trim()),'course')
   //   );
@@ -109,19 +134,21 @@ const Course = () => {
   // };
 
   useEffect(() => {
-    getCourses();
+    getPrograms();
   }, []);
 
-  const getCourses = async () => {
+  const getPrograms = async () => {
     try {
       setIsLoading(true);
-      let { data: courses, error } = await Supabase.from("courses").select("*");
+      let { data: programs, error } = await Supabase.from("programs").select(
+        "*"
+      );
       if (error) {
         toast.error(error?.message);
-        console.error("Course List Error:", error.message);
+        console.error("Programs List Error:", error.message);
         return;
       }
-      setCoursesData(courses);
+      setProgramsData(programs);
       setIsLoading(false);
     } catch (err) {
       toast.error(err?.message || "Something went wrong");
@@ -132,17 +159,17 @@ const Course = () => {
   const handleDelete = async (id) => {
     setIsDeleting(true);
     try {
-      const { error } = await Supabase.from("courses").delete().eq("id", id);
+      const { error } = await Supabase.from("programs").delete().eq("id", id);
 
       if (error) {
         toast.error(error.message);
-        console.error("Course Delete Error:", error.message);
+        console.error("Programs Delete Error:", error.message);
         return;
       }
 
-      await getCourses(); // wait for table refresh before closing modal
+      await getPrograms(); // wait for table refresh before closing modal
 
-      toast.success("Course record deleted successfully");
+      toast.success("Program record deleted successfully");
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
     } catch (err) {
@@ -159,9 +186,9 @@ const Course = () => {
         title="React.js Basic Tables Dashboard | TailAdmin - Next.js Admin Dashboard Template"
         description="This is React.js Basic Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
-      <PageBreadcrumb pageTitle="Courses List" />
+      <PageBreadcrumb pageTitle="Programs List" />
       <div className="space-y-6">
-        <ComponentCard title="Courses List">
+        <ComponentCard title="Programs List">
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
             <div className="max-w-full overflow-x-auto">
               <CustomTable
@@ -171,18 +198,18 @@ const Course = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
-                onEdit={(course) => navigate(`/courses/edit/${course.id}`)}
-                onDelete={(course) => {
-                  setItemToDelete(course);
+                onEdit={(program) => navigate(`/programs/edit/${program.id}`)}
+                onDelete={(program) => {
+                  setItemToDelete(program);
                   setIsDeleteModalOpen(true);
                 }}
                 showSearch={true}
                 searchValue={search}
                 onSearchChange={handleSearchChange}
-                searchPlaceholder="Search courses..."
+                searchPlaceholder="Search programs..."
                 showAddButton={true}
-                addButtonText="Add Course"
-                onAddClick={() => navigate("/courses/add")}
+                addButtonText="Add Program"
+                onAddClick={() => navigate("/programs/add")}
               />
             </div>
           </div>
@@ -205,7 +232,7 @@ const Course = () => {
 
           {/* Warning Text */}
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            Are you sure you want to delete this course record?
+            Are you sure you want to delete this program record?
           </h2>
 
           {/* Action Buttons */}
@@ -231,8 +258,20 @@ const Course = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={isImageModalOpen}
+        onClose={() => {
+          setIsImageModalOpen(false);
+          setSelectedImage({ src: null, title: "" });
+        }}
+        src={selectedImage.src}
+        alt="Program Image"
+        title={selectedImage.title}
+      />
     </>
   );
 };
 
-export default Course;
+export default Programs;

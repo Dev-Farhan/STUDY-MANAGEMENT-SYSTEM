@@ -99,6 +99,21 @@ export const toggleCourseStatus = (
     "Course"
   );
 };
+export const toggleProgramStatus = (
+  programId,
+  currentStatus,
+  setProgramsData,
+  navigate
+) => {
+  return toggleItemStatus(
+    "programs",
+    programId,
+    currentStatus,
+    setProgramsData,
+    navigate,
+    "Program"
+  );
+};
 
 export const toggleEmployeeStatus = (
   employeeId,

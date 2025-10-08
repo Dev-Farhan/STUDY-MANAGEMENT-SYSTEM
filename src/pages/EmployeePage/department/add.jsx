@@ -45,7 +45,7 @@ export default function DepartmentAdd() {
 
       reset();
       toast.success("Department added successfully!");
-      navigate("/department");
+      navigate("/employees/department");
     } catch (err) {
       toast.error(err?.message || "Something went wrong");
       console.error("Unexpected Error:", err);

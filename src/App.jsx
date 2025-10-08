@@ -18,6 +18,9 @@ import CourseAdd from "./pages/Courses/courses/add.jsx";
 import CourseEdit from "./pages/Courses/courses/edit.jsx";
 import BranchList from "./pages/Branch/index.jsx";
 import BranchAdd from "./pages/Branch/add.jsx";
+import Programs from "./pages/Courses/programs/index.jsx";
+import ProgramAdd from "./pages/Courses/programs/add.jsx";
+import ProgramEdit from "./pages/Courses/programs/edit.jsx";
 export default function App() {
   return (
     <>
@@ -68,6 +71,11 @@ export default function App() {
               path="/employees/edit/:id"
               element={<EmployeeEdit />}
             />
+
+            {/* program routes  */}
+            <Route index path="/programs" element={<Programs />} />
+            <Route index path="/programs/add" element={<ProgramAdd />} />
+            <Route index path="/programs/edit/:id" element={<ProgramEdit />} />
           </Route>
 
           {/* Fallback Route */}

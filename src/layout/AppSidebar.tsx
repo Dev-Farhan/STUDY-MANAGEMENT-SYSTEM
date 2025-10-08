@@ -25,7 +25,7 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     path: "/",
   },
-    {
+  {
     icon: <IoGitBranchOutline />,
     name: "Branch",
     path: "/branch",
@@ -44,11 +44,19 @@ const navItems: NavItem[] = [
   //   path: "/profile",
   // },
   {
-    icon: <TaskIcon />,
+    icon: <UserCircleIcon />,
     name: "Courses",
-    path: "/courses",
+    subItems: [
+      { name: "Programs", path: "/programs", pro: false },
+      { name: "Courses", path: "/courses", pro: false },
+    ],
   },
- 
+  // {
+  //   icon: <TaskIcon />,
+  //   name: "Courses",
+  //   path: "/courses",
+  // },
+
   // {
   //   name: "Forms",
   //   icon: <ListIcon />,
@@ -379,7 +387,7 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              { renderMenuItems(othersItems, "others") }
+              {renderMenuItems(othersItems, "others")}
             </div>
           </div>
         </nav>
