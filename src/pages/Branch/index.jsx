@@ -20,11 +20,20 @@ const BranchList = () => {
   };
 
   const columns = [
-    { key: "center_name", label: "Center Name" },
-    { key: "center_code", label: "Center Code" },
-    { key: "contact_no", label: "Contact" },
-    { key: "state", label: "State" },
-    { key: "city", label: "City" },
+    {
+      key: "center_name",
+      label: "Center Name",
+      render: (value, row) => (
+        <div className="flex items-center gap-2">
+          {value}
+          {row.is_primary && (
+            <span className="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">
+              Primary
+            </span>
+          )}
+        </div>
+      ),
+    },
     {
       key: "isActive",
       label: "Status",
@@ -58,10 +67,10 @@ const BranchList = () => {
   const fetchCourses = async (query) => {
     setIsLoading(true);
     try {
-      let supabaseQuery = Supabase.from("courses").select("*");
+      let supabaseQuery = Supabase.from("branch").select("*");
 
       if (query.trim() !== "") {
-        supabaseQuery = supabaseQuery.ilike("course_name", `%${query.trim()}%`);
+        supabaseQuery = supabaseQuery.ilike("center_name", `%${query.trim()}%`);
       }
 
       const { data, error } = await supabaseQuery;
@@ -109,19 +118,19 @@ const BranchList = () => {
   // };
 
   useEffect(() => {
-    getCourses();
+    getBranches();
   }, []);
 
-  const getCourses = async () => {
+  const getBranches = async () => {
     try {
       setIsLoading(true);
-      let { data: courses, error } = await Supabase.from("courses").select("*");
+      let { data: branch, error } = await Supabase.from("branch").select("*");
       if (error) {
         toast.error(error?.message);
-        console.error("Course List Error:", error.message);
+        console.error("Branch List Error:", error.message);
         return;
       }
-      setCoursesData(courses);
+      setCoursesData(branch);
       setIsLoading(false);
     } catch (err) {
       toast.error(err?.message || "Something went wrong");
@@ -132,17 +141,42 @@ const BranchList = () => {
   const handleDelete = async (id) => {
     setIsDeleting(true);
     try {
-      const { error } = await Supabase.from("courses").delete().eq("id", id);
+      // First check if this is the primary branch
+      const { data: branchData, error: fetchError } = await Supabase.from(
+        "branch"
+      )
+        .select("is_primary")
+        .eq("id", id)
+        .single();
 
-      if (error) {
-        toast.error(error.message);
-        console.error("Course Delete Error:", error.message);
+      if (fetchError) {
+        toast.error("Error fetching branch details");
+        console.error("Branch Fetch Error:", fetchError.message);
+        setIsDeleting(false);
         return;
       }
 
-      await getCourses(); // wait for table refresh before closing modal
+      // If this is the primary branch, prevent deletion
+      if (branchData?.is_primary) {
+        toast.error("Primary branch cannot be deleted");
+        setIsDeleting(false);
+        setIsDeleteModalOpen(false);
+        return;
+      }
 
-      toast.success("Course record deleted successfully");
+      // Proceed with deletion if not primary
+      const { error: deleteError } = await Supabase.from("branch")
+        .delete()
+        .eq("id", id);
+
+      if (deleteError) {
+        toast.error(deleteError.message);
+        console.error("Branch Delete Error:", deleteError.message);
+        return;
+      }
+
+      await getBranches(); // wait for table refresh before closing modal
+      toast.success("Branch record deleted successfully");
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
     } catch (err) {
@@ -169,9 +203,9 @@ const BranchList = () => {
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
-            onEdit={(course) => navigate(`/courses/edit/${course.id}`)}
-            onDelete={(course) => {
-              setItemToDelete(course);
+            onEdit={(branch) => navigate(`/branch/edit/${branch.id}`)}
+            onDelete={(branch) => {
+              setItemToDelete(branch);
               setIsDeleteModalOpen(true);
             }}
             showSearch={true}
@@ -201,7 +235,7 @@ const BranchList = () => {
 
           {/* Warning Text */}
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            Are you sure you want to delete this course record?
+            Are you sure you want to delete this branch record?
           </h2>
 
           {/* Action Buttons */}

@@ -14,10 +14,29 @@ import Label from "@components/form/Label.tsx";
 import Input from "@components/form/input/InputField";
 import Select from "../../components/form/Select";
 import axios from "axios";
+import { useDropzone } from "react-dropzone";
+import { uploadImageToCloudinary } from "../../config/cloudinaryConfig";
+// import { uploadImageToCloudinary } from "../../../config/cloudinaryConfig";
 
 const API_KEY = import.meta.env.VITE_STATE_CITY_API_KEY;
 
 const schema = yup.object().shape({
+  logo_url: yup
+    .mixed()
+    .test("fileSize", "File size is too large", (value) => {
+      if (!value) return true; // Allow empty value
+      return value.size <= 5 * 1024 * 1024; // 5MB
+    })
+    .test("fileType", "Unsupported file type", (value) => {
+      if (!value) return true; // Allow empty value
+      return [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/svg+xml",
+      ].includes(value.type);
+    }),
+
   center_code: yup
     .string()
     .required("Center code is a required field")
@@ -73,9 +92,82 @@ const schema = yup.object().shape({
       value: yup.string().required(),
       label: yup.string().required(),
     })
-    .nullable().test("city-required", "City is a required field", (value) => {
+    .nullable()
+    .test("city-required", "City is a required field", (value) => {
       return value && value.value;
     }),
+
+  // Center Head Profile Validations
+  name: yup
+    .string()
+    .required("Name is required")
+    .min(2, "Name must be at least 2 characters")
+    .max(50, "Name must not exceed 50 characters")
+    .matches(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces"),
+
+  gender: yup
+    .object()
+    .required("Gender is required")
+    .shape({
+      value: yup.string().required(),
+      label: yup.string().required(),
+    })
+    .nullable()
+    .test("gender-required", "Please select a valid gender", (value) => {
+      return value && ["male", "female", "other"].includes(value.value);
+    }),
+
+  mobile_number: yup
+    .string()
+    .required("Mobile number is required")
+    .matches(/^[0-9]{10}$/, "Mobile number must be exactly 10 digits"),
+
+  email: yup
+    .string()
+    .required("Email is required")
+    .email("Please enter a valid email address")
+    .max(255, "Email must not exceed 255 characters"),
+
+  address: yup
+    .string()
+    .required("Address is required")
+    .min(5, "Address must be at least 5 characters")
+    .max(200, "Address must not exceed 200 characters"),
+
+  address_proof: yup
+    .object()
+    .required("Address proof is required")
+    .shape({
+      value: yup.string().required(),
+      label: yup.string().required(),
+    })
+    .nullable()
+    .test(
+      "address-proof-required",
+      "Please select a valid address proof type",
+      (value) => {
+        return (
+          value &&
+          [
+            "aadhar",
+            "passport",
+            "driving_license",
+            "voter_id",
+            "electricity_bill",
+          ].includes(value.value)
+        );
+      }
+    ),
+
+  id_number: yup
+    .string()
+    .required("ID number is required")
+    .matches(
+      /^[A-Za-z0-9-]+$/,
+      "ID number can only contain letters, numbers and hyphens"
+    )
+    .min(8, "ID number must be at least 8 characters")
+    .max(20, "ID number must not exceed 20 characters"),
 });
 
 export default function BranchAdd() {
@@ -83,18 +175,70 @@ export default function BranchAdd() {
 
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
-
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const {
     control,
     register,
     handleSubmit,
     reset,
     watch,
+    setValue,
+    clearErrors,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
+    defaultValues: {
+      logo_url: null,
+    },
   });
   const selectedState = watch("state");
+
+  // Handle image upload with dropzone
+  const onDrop = (acceptedFiles) => {
+    if (acceptedFiles.length > 0) {
+      const file = acceptedFiles[0];
+      setSelectedImage(file);
+      setValue("logo_url", file);
+      clearErrors("logo_url");
+
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    }
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "image/png": [],
+      "image/jpeg": [],
+      "image/jpg": [],
+      "image/webp": [],
+      "image/svg+xml": [],
+    },
+    maxFiles: 1,
+    maxSize: 5 * 1024 * 1024, // 5MB
+  });
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setValue("logo_url", null);
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+  };
+
+  // Cleanup image preview URL on component unmount
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   // 🏙️ Get all states (on load)
   useEffect(() => {
@@ -159,7 +303,6 @@ export default function BranchAdd() {
   };
 
   const onSubmit = async (formData) => {
-    console.log("Form Data:", formData);
     // const {
     //   data: { user },
     //   error: userError,
@@ -176,31 +319,79 @@ export default function BranchAdd() {
     // };
 
     try {
-      const { data, error } = await Supabase.from("courses")
-        .insert([formData]) // use [formData] to insert as a row
+      setIsUploading(true);
+      let logoUrl = null;
+
+      // If an image is selected, upload it to Cloudinary first
+      if (selectedImage) {
+        toast.info("Uploading image to Cloudinary...");
+
+        const uploadResult = await uploadImageToCloudinary(selectedImage);
+
+        if (!uploadResult.success) {
+          toast.error(`Image upload failed: ${uploadResult.error}`);
+          setIsUploading(false);
+          return;
+        }
+
+        logoUrl = uploadResult.url;
+        toast.success("Image uploaded successfully!");
+      }
+
+      // Prepare data for database insertion
+      const dataToInsert = {
+        // Center Information
+        center_code: formData.center_code,
+        center_name: formData.center_name,
+        society_trust_company: formData.society_trust_company,
+        reg_no: formData.reg_no,
+        reg_year: formData.reg_year,
+        center_address: formData.center_address,
+        contact_no: formData.contact_no,
+        state: formData.state.value,
+        city: formData.city.value,
+
+        // Center Head Profile
+        name: formData.name,
+        gender: formData.gender.value,
+        mobile_number: formData.mobile_number,
+        email: formData.email,
+        address: formData.address,
+        address_proof: formData.address_proof.value,
+        id_number: formData.id_number,
+
+        // Logo URL (if available)
+        ...(logoUrl && { logo_url: logoUrl }),
+      };
+
+      const { data, error } = await Supabase.from("branch")
+        .insert([dataToInsert])
         .select();
 
       if (error) {
         toast.error(error?.message);
-        console.error("Course Add Error:", error.message);
+        console.error("Branch Add Error:", error.message);
+        setIsUploading(false);
         return;
       }
 
       reset(); // clear form fields
-      toast.success("Course added successfully!");
-      navigate("/courses");
+      removeImage(); // clear image
+      setIsUploading(false);
+      toast.success("Branch added successfully!");
+      navigate("/branch");
     } catch (err) {
       toast.error(err?.message || "Something went wrong");
       console.error("Unexpected Error:", err);
+      setIsUploading(false);
     }
   };
-  console.log("State error object:", errors.state);
 
   return (
     <div>
       <PageMeta
-        title="React.js Form Elements Dashboard | TailAdmin - React.js Admin Dashboard Template"
-        description="This is React.js Form Elements  Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title="Add Branch | Study Management System"
+        description="Add a new branch or center to the Study Management System. Register center details, head profile, and location information."
       />
       <PageBreadcrumb pageTitle="Branch Add" />
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-1">
@@ -327,6 +518,217 @@ export default function BranchAdd() {
                     />
                   )}
                 />
+              </div>
+            </div>
+            <h3 className="pb-5 mt-15 text-base font-medium text-gray-800 dark:text-white/90">
+              Center Head Profile
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3  gap-4">
+              <div>
+                <Label htmlFor="input">Name</Label>
+                <Input
+                  type="text"
+                  id="input"
+                  {...register("name")}
+                  error={!!errors.name}
+                  hint={errors.name?.message}
+                  placeholder={`Enter name`}
+                />
+              </div>
+              <div>
+                <Label htmlFor="gender">Gender</Label>
+                <Controller
+                  name="gender"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      options={[
+                        { value: "male", label: "Male" },
+                        { value: "female", label: "Female" },
+                        { value: "other", label: "Other" },
+                      ]}
+                      placeholder="Select Gender"
+                      error={!!errors.gender}
+                      hint={errors.gender?.message}
+                    />
+                  )}
+                />
+              </div>
+              <div>
+                <Label htmlFor="input">Mobile Number</Label>
+                <Input
+                  type="text"
+                  id="input"
+                  {...register("mobile_number")}
+                  error={!!errors.mobile_number}
+                  hint={errors.mobile_number?.message}
+                  placeholder={`Enter mobile number`}
+                />
+              </div>
+              <div>
+                <Label htmlFor="input">Email</Label>
+                <Input
+                  type="text"
+                  id="input"
+                  {...register("email")}
+                  error={!!errors.email}
+                  hint={errors.email?.message}
+                  placeholder={`Enter email`}
+                />
+              </div>
+              <div>
+                <Label htmlFor="input">Address</Label>
+                <Input
+                  type="text"
+                  id="input"
+                  {...register("address")}
+                  error={!!errors.address}
+                  hint={errors.address?.message}
+                  placeholder={`Enter address`}
+                />
+              </div>
+              <div>
+                <Label htmlFor="address_proof">Address Proof</Label>
+                <Controller
+                  name="address_proof"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      options={[
+                        { value: "aadhar", label: "Aadhar Card" },
+                        { value: "passport", label: "Passport" },
+                        { value: "driving_license", label: "Driving License" },
+                        { value: "voter_id", label: "Voter ID" },
+                        {
+                          value: "electricity_bill",
+                          label: "Electricity Bill",
+                        },
+                      ]}
+                      placeholder="Select Address Proof Type"
+                      error={!!errors.address_proof}
+                      hint={errors.address_proof?.message}
+                    />
+                  )}
+                />
+              </div>
+              <div>
+                <Label htmlFor="input">ID Number</Label>
+                <Input
+                  type="text"
+                  id="input"
+                  {...register("id_number")}
+                  error={!!errors.id_number}
+                  hint={errors.id_number?.message}
+                  placeholder={`Enter ID number`}
+                />
+              </div>
+              <div className="md:col-span-3">
+                <Label>Center Logo</Label>
+                <div className="mt-2">
+                  {!selectedImage ? (
+                    <div
+                      className={`transition border-2 ${
+                        errors.logo_url
+                          ? "border-red-500"
+                          : "border-gray-300 dark:border-gray-700"
+                      } border-dashed cursor-pointer hover:border-brand-500 dark:hover:border-brand-500 rounded-xl`}
+                    >
+                      <div
+                        {...getRootProps()}
+                        className={`dropzone rounded-xl p-7 lg:p-10 ${
+                          isDragActive
+                            ? "bg-gray-100 dark:bg-gray-800"
+                            : "bg-gray-50 dark:bg-gray-900"
+                        }`}
+                      >
+                        <input {...getInputProps()} />
+                        <div className="dz-message flex flex-col items-center m-0">
+                          <div className="mb-6 flex justify-center">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 text-brand-500 dark:bg-gray-800 dark:text-brand-400">
+                              <svg
+                                className="h-8 w-8"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+
+                          <h4 className="mb-2 text-lg font-semibold text-gray-800 dark:text-white/90">
+                            {isDragActive
+                              ? "Drop logo here"
+                              : "Upload Center Logo"}
+                          </h4>
+
+                          <p className="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                            Drag and drop your logo here or click to browse
+                          </p>
+
+                          <p className="text-xs text-gray-500 dark:text-gray-500">
+                            Supported formats: PNG, JPG, WebP, SVG (Max 5MB)
+                          </p>
+
+                          <button
+                            type="button"
+                            className="mt-4 px-4 py-2 text-sm font-medium text-brand-500 bg-brand-50 rounded-lg hover:bg-brand-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+                          >
+                            Select File
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative group">
+                      <div className="aspect-video w-full max-w-sm overflow-hidden rounded-xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-gray-900">
+                        <img
+                          src={imagePreview}
+                          alt="Center logo preview"
+                          className="h-full w-full object-contain p-4"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-colors hover:bg-red-600"
+                      >
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                      <div className="mt-2 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+                        <span className="truncate">{selectedImage.name}</span>
+                        <span>
+                          {(selectedImage.size / 1024 / 1024).toFixed(2)} MB
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {errors.logo_url && (
+                    <p className="mt-2 text-sm font-medium text-red-600 dark:text-red-400">
+                      {errors.logo_url.message}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
             <div className="w-full  flex items-center justify-between gap-2 mt-4">

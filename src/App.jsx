@@ -21,6 +21,7 @@ import BranchAdd from "./pages/Branch/add.jsx";
 import Programs from "./pages/Courses/programs/index.jsx";
 import ProgramAdd from "./pages/Courses/programs/add.jsx";
 import ProgramEdit from "./pages/Courses/programs/edit.jsx";
+import BranchEdit from "./pages/Branch/edit.jsx";
 export default function App() {
   return (
     <>
@@ -43,6 +44,7 @@ export default function App() {
             {/* branch routes  */}
             <Route index path="/branch" element={<BranchList />} />
             <Route index path="/branch/add" element={<BranchAdd />} />
+            <Route index path="/branch/edit/:id" element={<BranchEdit />} />
 
             {/* course routes  */}
             <Route index path="/courses" element={<Course />} />

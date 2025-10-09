@@ -138,7 +138,7 @@ export const toggleBranchStatus = (
   navigate
 ) => {
   return toggleItemStatus(
-    "branches",
+    "branch",
     branchId,
     currentStatus,
     setBranchesData,

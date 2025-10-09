@@ -31,7 +31,7 @@ const Course = () => {
       render: (value, row) => (
         <Switch
           label=""
-          checked={row.isActive || false}
+          checked={!!row.isActive}
           onChange={() => {
             handleToggleStatus(row.id, row.isActive);
           }}
