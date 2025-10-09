@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 interface Option {
   value: string;
   label: string;
@@ -22,20 +20,17 @@ const Select: React.FC<SelectProps> = ({
   placeholder = "Select an option",
   onChange,
   className = "",
-  defaultValue = "",
   value = null,
   success = false,
   error = false,
   hint,
 }) => {
-  const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
-
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedOption =
       options.find((opt) => opt.value === e.target.value) || null;
     onChange(selectedOption);
   };
-  console.log("hintttttttttt",error, hint);
+  console.log("hintttttttttt", error, hint);
   return (
     <div className="w-full">
       <select

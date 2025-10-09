@@ -7,7 +7,6 @@ import {
   GridIcon,
   HorizontaLDots,
   UserCircleIcon,
-  TaskIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { BsFileBarGraph, BsFileBarGraphFill } from "react-icons/bs";
