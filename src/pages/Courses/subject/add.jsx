@@ -17,92 +17,92 @@ import { get } from "lodash";
 import Select from "../../../components/form/Select.tsx";
 const schema = yup.object().shape({
   program_name: yup
-    .mixed()
-    .transform((value) => (value && value.value ? value.value : ""))
-    .required("Program name is required"),
+    .object()
+    .nullable()
+    .required("Program name is required")
+    .test(
+      "program-value",
+      "Program name is required",
+      (value) => !!value?.value
+    ),
+
   course_name: yup
+    .object()
+    .nullable()
+    .required("Course name is required")
+    .test("course-value", "Course name is required", (value) => !!value?.value),
+  subject_code: yup
     .string()
-    .required("Course name is required field")
-    .min(3, "Course name must be at least 3 characters"),
+    .required("Subject code is required field")
+    .min(6, "Subject code must be at least 6 characters"),
 
-  course_code: yup
+  subject_name: yup
     .string()
-    .required("Course code is required field")
-    .min(6, "Course code must be at least 6 characters"),
-
-  fee: yup
+    .required("Subject name is required field")
+    .min(3, "Subject name must be at least 3 characters"),
+  total_marks: yup
     .string()
-    .required("Fees is required field")
-    .matches(/^[0-9]+$/, "Fees must be a valid number"),
-
-  duration: yup
-    .string()
-    .required("Duration is required field")
-    .matches(/^[0-9]+$/, "Duration must be a valid number (in months/years)"),
-
-  description: yup
-    .string()
-    .required("Description is required field")
-    .min(10, "Description must be at least 10 characters"),
+    .required("Total marks is required field")
+    .matches(/^[0-9]+$/, "Total marks must be a valid number"),
 });
 
-export default function CourseAdd() {
+export default function SubjectAdd() {
   let navigate = useNavigate();
   const [programs, setPrograms] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState([]);
   const {
     control,
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
-    defaultValues: {
-      description: "", // Make sure this matches the field name
-    },
+    defaultValues: { program_name: null, course_name: null },
   });
 
   useEffect(() => {
-    getPrograms();
-  }, []);
-
-  const getPrograms = async () => {
-    try {
-      const { data, error } = await Supabase.from("programs").select();
+    const fetchData = async () => {
+      const { data, error } = await Supabase.from("programs").select(
+        "*, courses(*)"
+      );
       if (error) {
-        console.error("Error fetching programs:", error);
-        toast.error("Failed to fetch programs");
+        toast.error("Failed to fetch programs and courses");
+        console.error(error);
         return;
       }
-      console.log("Programs Data:", data);
-      // Assuming you want to set the programs in a state or use them directly
       setPrograms(data);
-    } catch (error) {
-      console.error("Error fetching programs:", error);
-      toast.error("Failed to fetch programs");
-    }
-  };
+    };
+    fetchData();
+  }, []);
 
   const onSubmit = async (formData) => {
     toast.dismiss();
     // console.log("Form Data:", formData);
-    const { program_name, ...rest } = formData;
-    const transformData = { ...rest, program_id: program_name.id };
-    // console.log("llllllllllllllllllllll", transformData);
     try {
-      const { data, error } = await Supabase.from("courses")
-        .insert([transformData]) // use [formData] to insert as a row
+      const payload = {
+        program_id: formData.program_name?.id,
+        course_id: formData.course_name?.id,
+        subject_name: formData.subject_name,
+        subject_code: formData.subject_code,
+        total_marks: formData.total_marks,
+      };
+
+      console.log("Final Payload:", payload);
+      const { data, error } = await Supabase.from("subject")
+        .insert([payload])
         .select();
 
       if (error) {
         toast.error(error?.message);
-        console.error("Course Add Error:", error.message);
+        console.error("Subject Add Error:", error.message);
         return;
       }
 
       reset(); // clear form fields
-      toast.success("Course added successfully!");
-      navigate("/courses");
+      toast.success("Subject added successfully!");
+      navigate("/subject");
     } catch (err) {
       toast.error(err?.message || "Something went wrong");
       console.error("Unexpected Error:", err);
@@ -115,7 +115,7 @@ export default function CourseAdd() {
         title="React.js Form Elements Dashboard | TailAdmin - React.js Admin Dashboard Template"
         description="This is React.js Form Elements  Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
-      <PageBreadcrumb pageTitle="Course Add" />
+      <PageBreadcrumb pageTitle="Subject Add" />
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-1">
         {/* <DynamicFields fields={fields}  /> */}
         <ComponentCard title="Fill details">
@@ -140,78 +140,83 @@ export default function CourseAdd() {
                         errors.program_name?.message ||
                         "Program name is required field"
                       }
+                      onChange={(selectedOption) => {
+                        // Update form value
+                        field.onChange(selectedOption);
+
+                        // Filter the corresponding courses
+                        const selectedProgram = programs.find(
+                          (p) => p.program_name === selectedOption?.value
+                        );
+                        setFilteredCourses(selectedProgram?.courses || []);
+
+                        // Also reset the course field when program changes
+                        setValue("course_name", null);
+                      }}
                     />
                   )}
                 />
               </div>
               <div>
-                <Label htmlFor="input">Course Code</Label>
-                <Input
-                  type="text"
-                  id="input"
-                  {...register("course_code")}
-                  error={!!errors.course_code}
-                  hint={errors.course_code?.message}
-                  placeholder={`Enter course code`}
-                />
-              </div>
-              <div>
-                <Label htmlFor="input">Course Name</Label>
-                <Input
-                  type="text"
-                  id="input"
-                  {...register("course_name")}
-                  error={!!errors.course_name}
-                  hint={errors.course_name?.message}
-                  placeholder={`Enter course name`}
-                />
-              </div>
-              <div>
-                <Label htmlFor="input">Course Fee</Label>
-                <Input
-                  type="text"
-                  id="input"
-                  {...register("fee")}
-                  error={!!errors.fee}
-                  hint={errors.fee?.message}
-                  placeholder={`Enter course fee`}
-                />
-              </div>
-              <div>
-                <Label htmlFor="input">Course Duration</Label>
-                <Input
-                  type="text"
-                  id="input"
-                  {...register("duration")}
-                  error={!!errors.duration}
-                  hint={errors.duration?.message}
-                  placeholder={`Enter course duration in months`}
-                />
-              </div>
-              <div>
-                {/* <Label>Description</Label>
-                <TextArea
-                  {...register("description")}
-                  error={!!errors.description}
-                  hint={errors.description?.message}
-                  placeholder="Enter description"
-                   value={""}
-                  onChange={(value) => {}}
-                  rows={6}
-                /> */}
+                <Label htmlFor="course_name">Course Name</Label>
                 <Controller
-                  name="description"
+                  name="course_name"
                   control={control}
-                  defaultValue=""
                   render={({ field }) => (
-                    <TextArea
+                    <Select
                       {...field}
-                      rows={6}
-                      error={!!errors.description}
-                      hint={errors.description?.message}
-                      placeholder="Enter description"
+                      options={filteredCourses.map((course) => ({
+                        value: course.course_name,
+                        label: course.course_name,
+                        id: course.id,
+                      }))}
+                      placeholder={
+                        filteredCourses.length
+                          ? "Select Course"
+                          : "Select a Program first"
+                      }
+                      isDisabled={!filteredCourses.length}
+                      error={!!errors.course_name}
+                      hint={
+                        errors.course_name?.message ||
+                        "Course name is required field"
+                      }
                     />
                   )}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="input">Subject Code</Label>
+                <Input
+                  type="text"
+                  id="input"
+                  {...register("subject_code")}
+                  error={!!errors.subject_code}
+                  hint={errors.subject_code?.message}
+                  placeholder={`Enter subject code`}
+                />
+              </div>
+              <div>
+                <Label htmlFor="input">Subject Name</Label>
+                <Input
+                  type="text"
+                  id="input"
+                  {...register("subject_name")}
+                  error={!!errors.subject_name}
+                  hint={errors.subject_name?.message}
+                  placeholder={`Enter subject name`}
+                />
+              </div>
+              <div>
+                <Label htmlFor="input">Total Marks</Label>
+                <Input
+                  type="text"
+                  id="input"
+                  {...register("total_marks")}
+                  error={!!errors.total_marks}
+                  hint={errors.total_marks?.message}
+                  placeholder={`Enter total marks`}
                 />
               </div>
             </div>

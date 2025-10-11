@@ -22,6 +22,9 @@ import Programs from "./pages/Courses/programs/index.jsx";
 import ProgramAdd from "./pages/Courses/programs/add.jsx";
 import ProgramEdit from "./pages/Courses/programs/edit.jsx";
 import BranchEdit from "./pages/Branch/edit.jsx";
+import SubjectList from "./pages/Courses/subject/index.jsx";
+import SubjectAdd from "./pages/Courses/subject/add.jsx";
+import SubjectEdit from "./pages/Courses/subject/edit.jsx";
 export default function App() {
   return (
     <>
@@ -50,6 +53,11 @@ export default function App() {
             <Route index path="/courses" element={<Course />} />
             <Route index path="/courses/add" element={<CourseAdd />} />
             <Route index path="/courses/edit/:id" element={<CourseEdit />} />
+
+            {/* subject routes  */}
+            <Route index path="/subject" element={<SubjectList />} />
+            <Route index path="/subject/add" element={<SubjectAdd />} />
+            <Route index path="/subject/edit/:id" element={<SubjectEdit />} />
 
             <Route index path="/employees" element={<EmployeeList />} />
             <Route

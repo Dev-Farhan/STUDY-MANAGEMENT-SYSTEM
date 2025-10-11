@@ -13,7 +13,13 @@ import Label from "../../../components/form/Label.tsx";
 import Input from "../../../components/form/input/InputField";
 import TextArea from "../../../components/form/input/TextArea.tsx";
 import { useEffect, useState } from "react";
+import Select from "../../../components/form/Select.tsx";
 const schema = yup.object().shape({
+  program_name: yup
+    .mixed()
+    .transform((value) => (value && value.value ? value.value : ""))
+    .required("Program name is required"),
+
   course_name: yup
     .string()
     .required("Course name is required field")
@@ -45,6 +51,7 @@ export default function CourseEdit() {
   let id = useParams();
 
   const [courseData, setCourseData] = useState({});
+  const [programs, setPrograms] = useState([]);
 
   const {
     control,
@@ -55,6 +62,7 @@ export default function CourseEdit() {
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
+      program_name: "",
       course_code: "",
       course_name: "",
       fee: "",
@@ -69,19 +77,67 @@ export default function CourseEdit() {
     }
   }, [id]);
 
+  useEffect(() => {
+    getPrograms();
+  }, []);
+
+  const getPrograms = async () => {
+    try {
+      const { data, error } = await Supabase.from("programs").select();
+      if (error) {
+        console.error("Error fetching programs:", error);
+        toast.error("Failed to fetch programs");
+        return;
+      }
+      console.log("Programs Data:", data);
+      // Assuming you want to set the programs in a state or use them directly
+      setPrograms(data);
+    } catch (error) {
+      console.error("Error fetching programs:", error);
+      toast.error("Failed to fetch programs");
+    }
+  };
+
   const getCourseData = async (courseId) => {
-    const { data, error } = await Supabase.from("courses")
+    // 1️⃣ Get the course data
+    const { data: courseData, error: courseError } = await Supabase.from(
+      "courses"
+    )
       .select("*")
       .eq("id", courseId)
       .single();
 
-    if (error) {
-      console.error("Error fetching course:", error);
-    } else {
-      console.log("ddddddddddddddddddd", data);
-      setCourseData(data);
-      reset(data);
+    if (courseError) {
+      console.error("Error fetching course:", courseError);
+      return;
     }
+
+    // 2️⃣ Fetch related program details using program_id
+    const { data: programData, error: programError } = await Supabase.from(
+      "programs"
+    )
+      .select("id, program_name")
+      .eq("id", courseData.program_id)
+      .single();
+
+    if (programError) {
+      console.error("Error fetching program:", programError);
+    }
+
+    // 3️⃣ Format data for form
+    const formattedData = {
+      ...courseData,
+      program_name: programData
+        ? {
+            value: programData.id, // store id in value
+            label: programData.program_name, // show program name
+          }
+        : null,
+    };
+
+    // 4️⃣ Update state and form
+    setCourseData(formattedData);
+    reset(formattedData);
   };
 
   const onSubmit = async (formData) => {
@@ -108,7 +164,6 @@ export default function CourseEdit() {
     }
   };
 
-  //   const onSubmit = () => {};
   return (
     <div>
       <PageMeta
@@ -121,6 +176,29 @@ export default function CourseEdit() {
         <ComponentCard title="Fill details">
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
+              <div>
+                <Label htmlFor="program_name">Program Name</Label>
+                <Controller
+                  name="program_name"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      options={programs.map((program) => ({
+                        value: program.program_name,
+                        label: program.program_name,
+                        id: program.id,
+                      }))}
+                      placeholder="Select Program"
+                      error={!!errors.program_name}
+                      hint={
+                        errors.program_name?.message ||
+                        "Program name is required field"
+                      }
+                    />
+                  )}
+                />
+              </div>
               <div>
                 <Label htmlFor="input">Course Code</Label>
                 <Input
