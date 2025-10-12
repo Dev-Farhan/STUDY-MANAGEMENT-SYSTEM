@@ -18,7 +18,7 @@ import Select from "../../../components/form/Select.tsx";
 const schema = yup.object().shape({
   program_name: yup
     .mixed()
-    .transform((value) => (value && value.value ? value.value : ""))
+    .transform((value) => (value && value.id ? value.id : ""))
     .required("Program name is required"),
   course_name: yup
     .string()
@@ -85,10 +85,11 @@ export default function CourseAdd() {
 
   const onSubmit = async (formData) => {
     toast.dismiss();
-    // console.log("Form Data:", formData);
+    console.log("Form Data:", formData);
     const { program_name, ...rest } = formData;
-    const transformData = { ...rest, program_id: program_name.id };
-    // console.log("llllllllllllllllllllll", transformData);
+
+    const transformData = { ...rest, program_id: program_name };
+    console.log("llllllllllllllllllllll", transformData);
     try {
       const { data, error } = await Supabase.from("courses")
         .insert([transformData]) // use [formData] to insert as a row

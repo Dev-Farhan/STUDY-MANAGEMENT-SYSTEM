@@ -42,7 +42,6 @@ const schema = yup.object().shape({
       );
     })
     .test("fileSize", "File size must be less than 5MB", function (value) {
-      if (!value) return true; // Allow empty/null values
       return value && value.size <= 5 * 1024 * 1024; // 5MB
     }),
 });
