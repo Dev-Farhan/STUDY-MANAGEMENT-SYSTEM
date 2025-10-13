@@ -114,6 +114,21 @@ export const toggleSubjectStatus = (
     "Subject"
   );
 };
+export const toggleSyllabusStatus = (
+  syllabusId,
+  currentStatus,
+  setSyllabusData,
+  navigate
+) => {
+  return toggleItemStatus(
+    "syllabus",
+    syllabusId,
+    currentStatus,
+    setSyllabusData,
+    navigate,
+    "Syllabus"
+  );
+};
 
 export const toggleProgramStatus = (
   programId,

@@ -350,7 +350,7 @@ export default function ProgramEdit() {
                 size="sm"
                 disabled={isUploading}
               >
-                {isUploading ? "Uploading..." : "Add"}
+                {isUploading ? "Uploading..." : "Upadate"}
               </Button>
             </div>
           </form>

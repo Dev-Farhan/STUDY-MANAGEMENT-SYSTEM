@@ -7,6 +7,8 @@ import {
   GridIcon,
   HorizontaLDots,
   UserCircleIcon,
+  BookOpenIcon,
+  NoteBookPenIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { BsFileBarGraph, BsFileBarGraphFill } from "react-icons/bs";
@@ -43,12 +45,21 @@ const navItems: NavItem[] = [
   //   path: "/profile",
   // },
   {
-    icon: <UserCircleIcon />,
+    icon: <BookOpenIcon />,
     name: "Courses",
     subItems: [
       { name: "Programs", path: "/programs", pro: false },
       { name: "Courses", path: "/courses", pro: false },
       { name: "Subject", path: "/subject", pro: false },
+    ],
+  },
+  {
+    icon: <NoteBookPenIcon />,
+    name: "Study Materials",
+    subItems: [
+      { name: "Syllabus", path: "/syllabus", pro: false },
+      // { name: "Courses", path: "/courses", pro: false },
+      // { name: "Subject", path: "/subject", pro: false },
     ],
   },
   // {
@@ -373,7 +384,7 @@ const AppSidebar: React.FC = () => {
               </h2>
               {renderMenuItems(navItems, "main")}
             </div>
-            <div className="">
+            {/* <div className="">
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
                   !isExpanded && !isHovered
@@ -388,7 +399,7 @@ const AppSidebar: React.FC = () => {
                 )}
               </h2>
               {renderMenuItems(othersItems, "others")}
-            </div>
+            </div> */}
           </div>
         </nav>
         {/* {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null} */}

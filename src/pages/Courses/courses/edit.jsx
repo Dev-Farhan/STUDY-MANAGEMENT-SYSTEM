@@ -276,7 +276,7 @@ export default function CourseEdit() {
                 Cancel
               </Button>
               <Button type="submit" className="w-[10%] px-10" size="sm">
-                Edit
+                Update
               </Button>
             </div>
           </form>

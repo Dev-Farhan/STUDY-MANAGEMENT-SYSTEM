@@ -10,21 +10,19 @@ import { Modal } from "../../../components/ui/modal/index.js";
 import { IoWarningOutline } from "react-icons/io5";
 import debounce from "lodash/debounce";
 import CustomTable from "../../Tables/CustomTable.jsx";
-import { toggleSubjectStatus } from "../../../utils/toggleUtils.js";
+import { toggleSyllabusStatus } from "../../../utils/toggleUtils.js";
 
-const SubjectList = () => {
+const SyllabusList = () => {
   let navigate = useNavigate();
 
-  const handleToggleStatus = (subjectId, currentStatus) => {
-    toggleSubjectStatus(subjectId, currentStatus, setSubjectData, navigate);
+  const handleToggleStatus = (syllabusId, currentStatus) => {
+    toggleSyllabusStatus(syllabusId, currentStatus, setSyllabusData, navigate);
   };
 
   const columns = [
-    { key: "subject_name", label: "Subject Name" },
-    { key: "subject_code", label: "Subject Code" },
     { key: "program_name", label: "Program" }, // new column
     { key: "course_name", label: "Course" },
-    { key: "total_marks", label: "Total Marks" },
+    { key: "subject_name", label: "Subject Name" },
     {
       key: "isActive",
       label: "Active",
@@ -40,7 +38,7 @@ const SubjectList = () => {
     },
   ];
 
-  const [subjectData, setSubjectData] = useState([]);
+  const [syllabusData, setSyllabusData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,10 +48,17 @@ const SubjectList = () => {
 
   const rowsPerPage = 10;
 
-  const formattedSubjects = subjectData.map((sub) => ({
-    ...sub, // keep existing fields like id, isActive
-    program_name: sub.programs?.program_name || "-", // map program name
-    course_name: sub.courses?.course_name || "-", // map course name
+  const formattedSubjects = syllabusData.map((sub) => ({
+    ...sub, // keep existing fields like id, isActive,
+    subject_name: sub.subject?.subject_name
+      ? sub.subject?.subject_name
+      : sub.subject_name || "-", // map subject name
+    program_name: sub.programs?.program_name
+      ? sub.programs?.program_name
+      : sub.program_name || "-", // map program name
+    course_name: sub.courses?.course_name
+      ? sub.courses?.course_name
+      : sub.course_name || "-", // map course name
   }));
 
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -65,15 +70,11 @@ const SubjectList = () => {
   const fetchCourses = async (query) => {
     setIsLoading(true);
     try {
-      let supabaseQuery = Supabase.from("subject").select(`
-        *,
-        programs:program_id (program_name),
-        courses:course_id (course_name)
-      `);
+      let supabaseQuery = Supabase.from("syllabus_view").select("*");
+
       if (query.trim() !== "") {
-        supabaseQuery = supabaseQuery.ilike(
-          "subject_name",
-          `%${query.trim()}%`
+        supabaseQuery = supabaseQuery.or(
+          `subject_name.ilike.%${query}%,program_name.ilike.%${query}%,course_name.ilike.%${query}%`
         );
       }
 
@@ -85,11 +86,11 @@ const SubjectList = () => {
         return;
       }
 
-      setSubjectData(data);
-      setIsLoading(false);
+      setSyllabusData(data);
     } catch (err) {
       toast.error("Unexpected error during search");
       console.error("Unexpected search error:", err);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -114,7 +115,7 @@ const SubjectList = () => {
   //   // console.log('search',e)
   //   const value = e.target.value;
   //   setSearch(value);
-  //   paginatedData = subjectData.filter(
+  //   paginatedData = syllabusData.filter(
   //     (course) => course.course_name.toLowerCase().includes(value.toLowerCase())
   //     // console.log(course.course_name.toLowerCase().includes(value.toLowerCase().trim()),'course')
   //   );
@@ -122,23 +123,24 @@ const SubjectList = () => {
   // };
 
   useEffect(() => {
-    getSubjects();
+    getSyllabus();
   }, []);
 
-  const getSubjects = async () => {
+  const getSyllabus = async () => {
     try {
       setIsLoading(true);
-      let { data: subjects, error } = await Supabase.from("subject").select(`
+      let { data: subjects, error } = await Supabase.from("syllabus").select(`
         *,
         programs(id, program_name),
-        courses(id, course_name)
+        courses(id, course_name),
+        subject(id, subject_name)
       `);
       if (error) {
         toast.error(error?.message);
-        console.error("Subject List Error:", error.message);
+        console.error("Syllabus List Error:", error.message);
         return;
       }
-      setSubjectData(subjects);
+      setSyllabusData(subjects);
       setIsLoading(false);
     } catch (err) {
       toast.error(err?.message || "Something went wrong");
@@ -149,17 +151,17 @@ const SubjectList = () => {
   const handleDelete = async (id) => {
     setIsDeleting(true);
     try {
-      const { error } = await Supabase.from("subject").delete().eq("id", id);
+      const { error } = await Supabase.from("syllabus").delete().eq("id", id);
 
       if (error) {
         toast.error(error.message);
-        console.error("Subject Delete Error:", error.message);
+        console.error("Syllabus Delete Error:", error.message);
         return;
       }
 
-      await getSubjects(); // wait for table refresh before closing modal
+      await getSyllabus(); // wait for table refresh before closing modal
 
-      toast.success("Subject record deleted successfully");
+      toast.success("Syllabus record deleted successfully");
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
     } catch (err) {
@@ -176,9 +178,9 @@ const SubjectList = () => {
         title="React.js Basic Tables Dashboard | TailAdmin - Next.js Admin Dashboard Template"
         description="This is React.js Basic Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
-      <PageBreadcrumb pageTitle="Subjects List" />
+      <PageBreadcrumb pageTitle="Syllabus List" />
       <div className="space-y-6">
-        <ComponentCard title="Subjects List">
+        <ComponentCard title="Syllabus List">
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
             <div className="max-w-full overflow-x-auto">
               <CustomTable
@@ -188,18 +190,18 @@ const SubjectList = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
-                onEdit={(subject) => navigate(`/subject/edit/${subject.id}`)}
-                onDelete={(subject) => {
-                  setItemToDelete(subject);
+                onEdit={(syllabus) => navigate(`/syllabus/edit/${syllabus.id}`)}
+                onDelete={(syllabus) => {
+                  setItemToDelete(syllabus);
                   setIsDeleteModalOpen(true);
                 }}
                 showSearch={true}
                 searchValue={search}
                 onSearchChange={handleSearchChange}
-                searchPlaceholder="Search subject..."
+                searchPlaceholder="Search syllabus..."
                 showAddButton={true}
-                addButtonText="Add Subject"
-                onAddClick={() => navigate("/subject/add")}
+                addButtonText="Add Syllabus"
+                onAddClick={() => navigate("/syllabus/add")}
               />
             </div>
           </div>
@@ -222,7 +224,7 @@ const SubjectList = () => {
 
           {/* Warning Text */}
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            Are you sure you want to delete this subject record?
+            Are you sure you want to delete this syllabus record?
           </h2>
 
           {/* Action Buttons */}
@@ -252,4 +254,4 @@ const SubjectList = () => {
   );
 };
 
-export default SubjectList;
+export default SyllabusList;

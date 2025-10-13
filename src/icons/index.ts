@@ -54,8 +54,14 @@ import { ReactComponent as ChatIcon } from "./chat.svg?react";
 import { ReactComponent as MoreDotIcon } from "./moredot.svg?react";
 import { ReactComponent as AlertHexaIcon } from "./alert-hexa.svg?react";
 import { ReactComponent as ErrorHexaIcon } from "./info-hexa.svg?react";
+import { ReactComponent as BookOpenIcon } from "./book-open-text.svg?react";
+import { ReactComponent as SquareLibIcon } from "./square-library.svg?react";
+import { ReactComponent as NoteBookPenIcon } from "./notebook-pen.svg?react";
 
 export {
+  NoteBookPenIcon,
+  SquareLibIcon,
+  BookOpenIcon,
   ErrorHexaIcon,
   AlertHexaIcon,
   MoreDotIcon,

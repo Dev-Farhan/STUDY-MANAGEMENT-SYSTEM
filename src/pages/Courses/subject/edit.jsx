@@ -268,7 +268,7 @@ export default function SubjectEdit() {
                 Cancel
               </Button>
               <Button type="submit" className="w-[10%] px-10" size="sm">
-                Add
+                Update
               </Button>
             </div>
           </form>
