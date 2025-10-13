@@ -2,7 +2,7 @@ import React from "react";
 import FileInput from "../input/FileInput";
 
 interface DynamicFileUploaderProps {
-  onFileSelect: (file: File | null) => void;
+  onFileSelect?: (file: File | null) => void;
   allowedTypes?: string[];
   maxSizeMB?: number;
   existingFile?: { name?: string; url?: string };
