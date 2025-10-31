@@ -50,7 +50,7 @@ const schema = yup.object().shape({
   // file_url: yup.mixed().required("File upload is required"),
 });
 
-export default function SyllabusEdit() {
+export default function StudyMaterialEdit() {
   let navigate = useNavigate();
   let { id } = useParams();
   const [programs, setPrograms] = useState([]);
@@ -71,7 +71,7 @@ export default function SyllabusEdit() {
     const fetchSyllabusById = async () => {
       if (!id) return;
 
-      const { data, error } = await Supabase.from("syllabus")
+      const { data, error } = await Supabase.from("studymaterial")
         .select(
           `
         *,
@@ -164,11 +164,11 @@ export default function SyllabusEdit() {
           try {
             // Extract the relative path from the full URL
             const oldPath = fileUrl.split(
-              "/storage/v1/object/public/syllabus_files/"
+              "/storage/v1/object/public/study-material_files/"
             )[1];
             if (oldPath) {
               const { error: delError } = await Supabase.storage
-                .from("syllabus_files")
+                .from("study-material_files")
                 .remove([oldPath]);
               if (delError)
                 console.warn("Failed to delete old file:", delError);
@@ -183,14 +183,14 @@ export default function SyllabusEdit() {
         const filePath = `uploads/${newFileName}`;
 
         const { error: uploadError } = await Supabase.storage
-          .from("syllabus_files")
+          .from("study-material_files")
           .upload(filePath, selectedFile);
 
         if (uploadError) throw uploadError;
 
         // 🌐 3️⃣ Get public URL of new file
         const { data: publicUrlData } = Supabase.storage
-          .from("syllabus_files")
+          .from("study-material_files")
           .getPublicUrl(filePath);
 
         fileUrl = publicUrlData.publicUrl;
@@ -207,15 +207,15 @@ export default function SyllabusEdit() {
       };
 
       // 💾 5️⃣ Update syllabus record
-      const { error: updateError } = await Supabase.from("syllabus")
+      const { error: updateError } = await Supabase.from("studymaterial")
         .update(payload)
         .eq("id", id);
 
       if (updateError) throw updateError;
 
       // ✅ Success
-      toast.success("Syllabus updated successfully!");
-      navigate("/syllabus");
+      toast.success("Study material updated successfully!");
+      navigate("/study-materials");
     } catch (error) {
       console.error("Update Error:", error.message);
       toast.error("Update failed!");

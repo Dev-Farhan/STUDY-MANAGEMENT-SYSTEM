@@ -28,6 +28,10 @@ import SubjectEdit from "./pages/Courses/subject/edit.jsx";
 import SyllabusList from "./pages/Study-Materials/syllabus/index.jsx";
 import SyllabusAdd from "./pages/Study-Materials/syllabus/add.jsx";
 import SyllabusEdit from "./pages/Study-Materials/syllabus/edit.jsx";
+import StudyMaterialList from "./pages/Study-Materials/study-materials/index.jsx";
+import StudyMaterialEdit from "./pages/Study-Materials/study-materials/edit.jsx";
+import StudyMaterialAdd from "./pages/Study-Materials/study-materials/add.jsx";
+
 export default function App() {
   return (
     <>
@@ -66,6 +70,23 @@ export default function App() {
             <Route index path="/syllabus" element={<SyllabusList />} />
             <Route index path="/syllabus/add" element={<SyllabusAdd />} />
             <Route index path="/syllabus/edit/:id" element={<SyllabusEdit />} />
+
+            {/* study routes  */}
+            <Route
+              index
+              path="/study-materials"
+              element={<StudyMaterialList />}
+            />
+            <Route
+              index
+              path="/study-materials/add"
+              element={<StudyMaterialAdd />}
+            />
+            <Route
+              index
+              path="/study-materials/edit/:id"
+              element={<StudyMaterialEdit />}
+            />
 
             <Route index path="/employees" element={<EmployeeList />} />
             <Route

@@ -50,7 +50,7 @@ const schema = yup.object().shape({
   // file_url: yup.mixed().required("File upload is required"),
 });
 
-export default function SyllabusAdd() {
+export default function StudyMaterialAdd() {
   let navigate = useNavigate();
   const [programs, setPrograms] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
@@ -133,14 +133,14 @@ export default function SyllabusAdd() {
       const fileName = `${Date.now()}_${selectedFile.name}`;
       const filePath = `uploads/${fileName}`;
       const { error: uploadError } = await Supabase.storage
-        .from("syllabus_files")
+        .from("study-material_files")
         .upload(filePath, selectedFile);
 
       if (uploadError) throw uploadError;
 
       // 2️⃣ Get public URL
       const { data: publicUrlData } = Supabase.storage
-        .from("syllabus_files")
+        .from("study-material_files")
         .getPublicUrl(filePath);
       const fileUrl = publicUrlData.publicUrl;
 
@@ -153,14 +153,14 @@ export default function SyllabusAdd() {
         file_url: fileUrl,
       };
 
-      const { error: dbError } = await Supabase.from("syllabus").insert([
+      const { error: dbError } = await Supabase.from("studymaterial").insert([
         payload,
       ]);
       if (dbError) throw dbError;
 
-      toast.success("Syllabus added successfully!");
+      toast.success("Study material added successfully!");
       reset();
-      navigate("/syllabus");
+      navigate("/study-materials");
     } catch (error) {
       console.error("Upload Error:", error.message);
       toast.error("Upload failed!");
@@ -173,7 +173,7 @@ export default function SyllabusAdd() {
         title="React.js Form Elements Dashboard | TailAdmin - React.js Admin Dashboard Template"
         description="This is React.js Form Elements  Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
-      <PageBreadcrumb pageTitle="Syllabus Add" />
+      <PageBreadcrumb pageTitle="Study Materail Add" />
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-1">
         {/* <DynamicFields fields={fields}  /> */}
         <ComponentCard title="Fill details">

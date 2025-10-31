@@ -325,11 +325,10 @@ export default function SyllabusAdd() {
             </div>
             <div className="w-full  flex items-center justify-between gap-2 mt-4">
               <Button
-                type="button"
                 className="w-[10%] px-10 "
                 size="sm"
                 variant="outline"
-                onClick={() => navigate(-1)}
+                onClick={() => navigate("/syllabus")}
               >
                 Cancel
               </Button>

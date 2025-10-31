@@ -194,7 +194,7 @@ const SyllabusList = () => {
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
                 onEdit={(studyMaterial) =>
-                  navigate(`/studymaterial/edit/${studyMaterial.id}`)
+                  navigate(`/study-materials/edit/${studyMaterial.id}`)
                 }
                 onDelete={(studyMaterial) => {
                   setItemToDelete(studyMaterial);
@@ -206,7 +206,7 @@ const SyllabusList = () => {
                 searchPlaceholder="Search study materials..."
                 showAddButton={true}
                 addButtonText="Add Study Material"
-                onAddClick={() => navigate("/studymaterial/add")}
+                onAddClick={() => navigate("/study-materials/add")}
               />
             </div>
           </div>
@@ -229,7 +229,7 @@ const SyllabusList = () => {
 
           {/* Warning Text */}
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            Are you sure you want to delete this syllabus record?
+            Are you sure you want to delete this study material record?
           </h2>
 
           {/* Action Buttons */}
