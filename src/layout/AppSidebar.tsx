@@ -59,7 +59,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Syllabus", path: "/syllabus", pro: false },
       { name: "Study Materials", path: "/study-materials", pro: false },
-      // { name: "Subject", path: "/subject", pro: false },
+      { name: "Video Classes", path: "/video-classes", pro: false },
     ],
   },
   // {

@@ -30,6 +30,7 @@
     "clsx": "^2.1.1",
     "flatpickr": "^4.6.13",
     "lodash": "^4.17.21",
+    "lucide-react": "^0.552.0",
     "react": "^19.0.0",
     "react-apexcharts": "^1.7.0",
     "react-dnd": "^16.0.1",

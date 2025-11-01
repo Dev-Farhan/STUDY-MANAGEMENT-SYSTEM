@@ -129,6 +129,21 @@ export const toggleSyllabusStatus = (
     "Syllabus"
   );
 };
+export const toggleVideoClassStatus = (
+  videoId,
+  currentStatus,
+  setVideoClassesData,
+  navigate
+) => {
+  return toggleItemStatus(
+    "videoclasses",
+    videoId,
+    currentStatus,
+    setVideoClassesData,
+    navigate,
+    "Video Class"
+  );
+};
 
 export const toggleProgramStatus = (
   programId,

@@ -10,13 +10,13 @@ import { Modal } from "../../../components/ui/modal/index.js";
 import { IoWarningOutline } from "react-icons/io5";
 import debounce from "lodash/debounce";
 import CustomTable from "../../Tables/CustomTable.jsx";
-import { toggleSyllabusStatus } from "../../../utils/toggleUtils.js";
+import { toggleVideoClassStatus } from "../../../utils/toggleUtils.js";
 
-const SyllabusList = () => {
+const VideoClassesList = () => {
   let navigate = useNavigate();
 
-  const handleToggleStatus = (syllabusId, currentStatus) => {
-    toggleSyllabusStatus(syllabusId, currentStatus, setSyllabusData, navigate);
+  const handleToggleStatus = (videoId, currentStatus) => {
+    toggleVideoClassStatus(videoId, currentStatus, setVideoClassData, navigate);
   };
 
   const columns = [
@@ -38,7 +38,7 @@ const SyllabusList = () => {
     },
   ];
 
-  const [syllabusData, setSyllabusData] = useState([]);
+  const [videoClassData, setVideoClassData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,7 +48,7 @@ const SyllabusList = () => {
 
   const rowsPerPage = 10;
 
-  const formattedSubjects = syllabusData.map((sub) => ({
+  const formattedSubjects = videoClassData.map((sub) => ({
     ...sub, // keep existing fields like id, isActive,
     subject_name: sub.subject?.subject_name
       ? sub.subject?.subject_name
@@ -86,7 +86,7 @@ const SyllabusList = () => {
         return;
       }
 
-      setSyllabusData(data);
+      setVideoClassData(data);
     } catch (err) {
       toast.error("Unexpected error during search");
       console.error("Unexpected search error:", err);
@@ -115,7 +115,7 @@ const SyllabusList = () => {
   //   // console.log('search',e)
   //   const value = e.target.value;
   //   setSearch(value);
-  //   paginatedData = syllabusData.filter(
+  //   paginatedData = videoClassData.filter(
   //     (course) => course.course_name.toLowerCase().includes(value.toLowerCase())
   //     // console.log(course.course_name.toLowerCase().includes(value.toLowerCase().trim()),'course')
   //   );
@@ -123,13 +123,13 @@ const SyllabusList = () => {
   // };
 
   useEffect(() => {
-    getSyllabus();
+    getVideoClass();
   }, []);
 
-  const getSyllabus = async () => {
+  const getVideoClass = async () => {
     try {
       setIsLoading(true);
-      let { data: subjects, error } = await Supabase.from("studymaterial")
+      let { data: subjects, error } = await Supabase.from("videoclasses")
         .select(`
         *,
         programs(id, program_name),
@@ -138,10 +138,10 @@ const SyllabusList = () => {
       `);
       if (error) {
         toast.error(error?.message);
-        console.error("Study Material List Error:", error.message);
+        console.error("Video classes List Error:", error.message);
         return;
       }
-      setSyllabusData(subjects);
+      setVideoClassData(subjects);
       setIsLoading(false);
     } catch (err) {
       toast.error(err?.message || "Something went wrong");
@@ -152,19 +152,19 @@ const SyllabusList = () => {
   const handleDelete = async (id) => {
     setIsDeleting(true);
     try {
-      const { error } = await Supabase.from("studymaterial")
+      const { error } = await Supabase.from("videoclasses")
         .delete()
         .eq("id", id);
 
       if (error) {
         toast.error(error.message);
-        console.error("Study Material Delete Error:", error.message);
+        console.error("Video class Delete Error:", error.message);
         return;
       }
 
-      await getSyllabus(); // wait for table refresh before closing modal
+      await getVideoClass(); // wait for table refresh before closing modal
 
-      toast.success("Study Material record deleted successfully");
+      toast.success("Class record deleted successfully");
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
     } catch (err) {
@@ -181,9 +181,9 @@ const SyllabusList = () => {
         title="React.js Basic Tables Dashboard | TailAdmin - Next.js Admin Dashboard Template"
         description="This is React.js Basic Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
-      <PageBreadcrumb pageTitle="Study Material List" />
+      <PageBreadcrumb pageTitle="Video Classes List" />
       <div className="space-y-6">
-        <ComponentCard title="Study Material List">
+        <ComponentCard title="Video Classes List">
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
             <div className="max-w-full overflow-x-auto">
               <CustomTable
@@ -193,20 +193,20 @@ const SyllabusList = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
-                onEdit={(studyMaterial) =>
-                  navigate(`/study-materials/edit/${studyMaterial.id}`)
+                onEdit={(videoClass) =>
+                  navigate(`/video-classes/edit/${videoClass.id}`)
                 }
-                onDelete={(studyMaterial) => {
-                  setItemToDelete(studyMaterial);
+                onDelete={(videoClass) => {
+                  setItemToDelete(videoClass);
                   setIsDeleteModalOpen(true);
                 }}
                 showSearch={true}
                 searchValue={search}
                 onSearchChange={handleSearchChange}
-                searchPlaceholder="Search study materials..."
+                searchPlaceholder="Search video classes..."
                 showAddButton={true}
-                addButtonText="Add Study Material"
-                onAddClick={() => navigate("/study-materials/add")}
+                addButtonText="Add Video Class"
+                onAddClick={() => navigate("/video-classes/add")}
               />
             </div>
           </div>
@@ -229,7 +229,7 @@ const SyllabusList = () => {
 
           {/* Warning Text */}
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            Are you sure you want to delete this study material record?
+            Are you sure you want to delete this syllabus record?
           </h2>
 
           {/* Action Buttons */}
@@ -259,4 +259,4 @@ const SyllabusList = () => {
   );
 };
 
-export default SyllabusList;
+export default VideoClassesList;

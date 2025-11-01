@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router";
 import NotFound from "./pages/OtherPage/NotFound.tsx";
 import AppLayout from "./layout/AppLayout.tsx";
 import { ScrollToTop } from "./components/common/ScrollToTop.tsx";
-import Home from "./pages/Dashboard/Home.tsx";
+import Home from "./pages/Dashboard/Home.jsx";
 import SignUp from "./pages/AuthPages/SignUp.tsx";
 import SignIn from "./pages/AuthPages/SignIn.tsx";
 import DepartmentList from "./pages/EmployeePage/department/list.jsx";
@@ -31,6 +31,9 @@ import SyllabusEdit from "./pages/Study-Materials/syllabus/edit.jsx";
 import StudyMaterialList from "./pages/Study-Materials/study-materials/index.jsx";
 import StudyMaterialEdit from "./pages/Study-Materials/study-materials/edit.jsx";
 import StudyMaterialAdd from "./pages/Study-Materials/study-materials/add.jsx";
+import VideoClassesList from "./pages/Study-Materials/video-classes/index.jsx";
+import VideoClassAdd from "./pages/Study-Materials/video-classes/add.jsx";
+import VideoClassEdit from "./pages/Study-Materials/video-classes/edit.jsx";
 
 export default function App() {
   return (
@@ -86,6 +89,18 @@ export default function App() {
               index
               path="/study-materials/edit/:id"
               element={<StudyMaterialEdit />}
+            />
+
+            <Route index path="/video-classes" element={<VideoClassesList />} />
+            <Route
+              index
+              path="/video-classes/add"
+              element={<VideoClassAdd />}
+            />
+            <Route
+              index
+              path="/video-classes/edit/:id"
+              element={<VideoClassEdit />}
             />
 
             <Route index path="/employees" element={<EmployeeList />} />
