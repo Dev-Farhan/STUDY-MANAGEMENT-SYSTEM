@@ -29,6 +29,10 @@ const CustomTable = ({
   showAddButton = false,
   addButtonText = "Add",
   onAddClick,
+  // Optional image display props
+  showImage = false,
+  imageKey = "img_url",
+  nameKey = "name",
 }) => {
   return (
     <Table>
@@ -98,16 +102,43 @@ const CustomTable = ({
             ))
           : data.map((row, rowIndex) => (
               <TableRow key={row.id || rowIndex}>
-                {columns.map((col, colIndex) => (
-                  <TableCell
-                    key={colIndex}
-                    className={`px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 ${
-                      col.key === "img_url" ? "w-20" : ""
-                    }`}
-                  >
-                    {col.render ? col.render(row[col.key], row) : row[col.key]}
-                  </TableCell>
-                ))}
+                {columns.map((col, colIndex) => {
+                  // If showImage is enabled and this column is the name column, render avatar + name
+                  // Support common student keys: `student_name` and `student_image_url` if imageKey/nameKey not provided
+                  const detectedImage = row[imageKey] || row["student_image_url"] || null;
+                  const detectedNameKey =
+                    col.key === nameKey || (col.key === "student_name" && row["student_name"]);
+                  const isNameColumn = showImage && detectedNameKey;
+                  const avatarAlt = row[nameKey] || row["student_name"] || "avatar";
+
+                  return (
+                    <TableCell
+                      key={colIndex}
+                      className={`px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 ${
+                        col.key === imageKey ? "w-20" : ""
+                      }`}
+                    >
+                      {isNameColumn ? (
+                        <div className="flex items-center gap-3">
+                          {detectedImage ? (
+                            <img
+                              src={detectedImage}
+                              alt={avatarAlt}
+                              className="h-8 w-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700" />
+                          )}
+                          <span>
+                            {col.render ? col.render(row[col.key], row) : row[col.key]}
+                          </span>
+                        </div>
+                      ) : (
+                        col.render ? col.render(row[col.key], row) : row[col.key]
+                      )}
+                    </TableCell>
+                  );
+                })}
 
                 {(onEdit || onDelete) && (
                   <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">

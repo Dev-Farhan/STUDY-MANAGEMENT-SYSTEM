@@ -11,8 +11,14 @@ import {
   NoteBookPenIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-import { BsFileBarGraph, BsFileBarGraphFill } from "react-icons/bs";
-import { IoGitBranchOutline } from "react-icons/io5";
+import {
+  BsFileBarGraph,
+  BsFileBarGraphFill,
+  BsPersonCircle,
+} from "react-icons/bs";
+import { PiStudent } from "react-icons/pi";
+import { IoGitBranchOutline, IoPersonOutline } from "react-icons/io5";
+import { HiOutlineUserCircle } from "react-icons/hi2";
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -32,12 +38,17 @@ const navItems: NavItem[] = [
     path: "/branch",
   },
   {
-    icon: <UserCircleIcon />,
+    icon: <HiOutlineUserCircle />,
     name: "Staff/Employee",
     subItems: [
       { name: "Department", path: "/employees/department", pro: false },
       { name: "List", path: "/employees", pro: false },
     ],
+  },
+  {
+    icon: <PiStudent />,
+    name: "Students",
+    subItems: [{ name: "List", path: "/students", pro: false }],
   },
   // {
   //   icon: <UserCircleIcon />,

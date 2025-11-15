@@ -34,6 +34,9 @@ import StudyMaterialAdd from "./pages/Study-Materials/study-materials/add.jsx";
 import VideoClassesList from "./pages/Study-Materials/video-classes/index.jsx";
 import VideoClassAdd from "./pages/Study-Materials/video-classes/add.jsx";
 import VideoClassEdit from "./pages/Study-Materials/video-classes/edit.jsx";
+import Students from "./pages/Students/index.jsx";
+import StudentAdd from "./pages/Students/add.jsx";
+import StudentEdit from "./pages/Students/edit.jsx";
 
 export default function App() {
   return (
@@ -130,6 +133,10 @@ export default function App() {
             <Route index path="/programs" element={<Programs />} />
             <Route index path="/programs/add" element={<ProgramAdd />} />
             <Route index path="/programs/edit/:id" element={<ProgramEdit />} />
+
+            <Route index path="/students" element={<Students />} />
+            <Route index path="/students/add" element={<StudentAdd />} />
+            <Route index path="/students/edit/:id" element={<StudentEdit />} />
           </Route>
 
           {/* Fallback Route */}
