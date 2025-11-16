@@ -105,11 +105,14 @@ const CustomTable = ({
                 {columns.map((col, colIndex) => {
                   // If showImage is enabled and this column is the name column, render avatar + name
                   // Support common student keys: `student_name` and `student_image_url` if imageKey/nameKey not provided
-                  const detectedImage = row[imageKey] || row["student_image_url"] || null;
+                  const detectedImage =
+                    row[imageKey] || row["student_image_url"] || null;
                   const detectedNameKey =
-                    col.key === nameKey || (col.key === "student_name" && row["student_name"]);
+                    col.key === nameKey ||
+                    (col.key === "student_name" && row["student_name"]);
                   const isNameColumn = showImage && detectedNameKey;
-                  const avatarAlt = row[nameKey] || row["student_name"] || "avatar";
+                  const avatarAlt =
+                    row[nameKey] || row["student_name"] || "avatar";
 
                   return (
                     <TableCell
@@ -130,11 +133,15 @@ const CustomTable = ({
                             <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700" />
                           )}
                           <span>
-                            {col.render ? col.render(row[col.key], row) : row[col.key]}
+                            {col.render
+                              ? col.render(row[col.key], row)
+                              : row[col.key]}
                           </span>
                         </div>
+                      ) : col.render ? (
+                        col.render(row[col.key], row)
                       ) : (
-                        col.render ? col.render(row[col.key], row) : row[col.key]
+                        row[col.key]
                       )}
                     </TableCell>
                   );

@@ -6,18 +6,13 @@ import {
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
-  UserCircleIcon,
   BookOpenIcon,
   NoteBookPenIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-import {
-  BsFileBarGraph,
-  BsFileBarGraphFill,
-  BsPersonCircle,
-} from "react-icons/bs";
+import { BsFileBarGraph, BsFileBarGraphFill } from "react-icons/bs";
 import { PiStudent } from "react-icons/pi";
-import { IoGitBranchOutline, IoPersonOutline } from "react-icons/io5";
+import { IoGitBranchOutline } from "react-icons/io5";
 import { HiOutlineUserCircle } from "react-icons/hi2";
 type NavItem = {
   name: string;

@@ -204,7 +204,7 @@ const Students = () => {
                 searchPlaceholder="Search studets..."
                 showAddButton={true}
                 addButtonText="Add student"
-                onAddClick={() => navigate("/Students/add")}
+                onAddClick={() => navigate("/students/add")}
                 showImage={true}
                 imageKey={studentsData?.student_image_url}
                 nameKey={studentsData?.student_name}

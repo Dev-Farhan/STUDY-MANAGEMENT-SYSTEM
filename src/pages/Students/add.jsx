@@ -670,16 +670,6 @@ export default function StudentAdd() {
               </div>
               {/* Date of Birth */}
               <div>
-                {/* <Label htmlFor="dob">Date of Birth</Label> */}
-                {/* <Input
-                  type="date"
-                  id="dob"
-                  {...register("dob")}
-                  error={!!errors.dob}
-                  hint={errors.dob?.message}
-                  placeholder="Select date of birth"
-                  max={new Date().toISOString().split("T")[0]} // disables future dates
-                /> */}
                 <Controller
                   name="dob"
                   control={control}
@@ -861,7 +851,10 @@ export default function StudentAdd() {
                 className="w-[10%] px-10"
                 size="sm"
                 variant="outline"
-                onClick={() => navigate(-1)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(-1);
+                }}
               >
                 Cancel
               </Button>

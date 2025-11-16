@@ -328,7 +328,10 @@ export default function SyllabusAdd() {
                 className="w-[10%] px-10 "
                 size="sm"
                 variant="outline"
-                onClick={() => navigate("/syllabus")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(-1);
+                }}
               >
                 Cancel
               </Button>

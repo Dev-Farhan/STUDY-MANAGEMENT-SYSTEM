@@ -159,7 +159,10 @@ export default function DepartmentEdit() {
                 className="w-[10%] px-10"
                 size="sm"
                 variant="outline"
-                onClick={() => navigate("/employees/department")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/employees/department");
+                }}
                 disabled={isLoading}
               >
                 Cancel

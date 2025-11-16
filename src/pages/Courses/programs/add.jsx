@@ -293,7 +293,10 @@ export default function ProgramAdd() {
                 className="w-[10%] px-10 "
                 size="sm"
                 variant="outline"
-                onClick={() => navigate(-1)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(-1);
+                }}
               >
                 Cancel
               </Button>
