@@ -14,6 +14,7 @@ import { BsFileBarGraph, BsFileBarGraphFill } from "react-icons/bs";
 import { PiStudent } from "react-icons/pi";
 import { IoGitBranchOutline } from "react-icons/io5";
 import { HiOutlineUserCircle } from "react-icons/hi2";
+import { AiOutlineProfile } from "react-icons/ai";
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -26,6 +27,11 @@ const navItems: NavItem[] = [
     icon: <GridIcon />,
     name: "Dashboard",
     path: "/",
+  },
+  {
+    icon: <AiOutlineProfile />,
+    name: "Profile",
+    path: "/profile",
   },
   {
     icon: <IoGitBranchOutline />,

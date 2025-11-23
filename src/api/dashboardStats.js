@@ -3,6 +3,8 @@ export const getDashboardStats = async () => {
   try {
     const [
       { count: branchCount, error: branchError },
+      { count: employeeCount, error: employeeError },
+      { count: studentCount, error: studentError },
       { count: programCount, error: programError },
       { count: courseCount, error: courseError },
       { count: subjectCount, error: subjectError },
@@ -12,6 +14,14 @@ export const getDashboardStats = async () => {
     ] = await Promise.all([
       supabase
         .from("branch")
+        .select("*", { count: "exact", head: true })
+        .eq("isActive", true),
+      supabase
+        .from("employees")
+        .select("*", { count: "exact", head: true })
+        .eq("isActive", true),
+      supabase
+        .from("students")
         .select("*", { count: "exact", head: true })
         .eq("isActive", true),
       supabase
@@ -39,6 +49,8 @@ export const getDashboardStats = async () => {
 
     if (
       programError ||
+      employeeError ||
+      studentError ||
       courseError ||
       subjectError ||
       videoError ||
@@ -48,6 +60,8 @@ export const getDashboardStats = async () => {
     ) {
       console.error("Error fetching counts:", {
         programError,
+        employeeError,
+        studentError,
         courseError,
         subjectError,
         videoError,
@@ -60,6 +74,8 @@ export const getDashboardStats = async () => {
 
     return {
       branch: branchCount || 0,
+      employees: employeeCount || 0,
+      students: studentCount || 0,
       programs: programCount || 0,
       courses: courseCount || 0,
       subjects: subjectCount || 0,
@@ -71,6 +87,8 @@ export const getDashboardStats = async () => {
     console.error("Dashboard stats error:", err.message);
     return {
       branch: 0,
+      employees: 0,
+      students: 0,
       programs: 0,
       courses: 0,
       subjects: 0,

@@ -18,6 +18,8 @@ export default function Home() {
 
   const [stats, setStats] = useState({
     branch: 0,
+    employees: 0,
+    students: 0,
     programs: 0,
     courses: 0,
     subjects: 0,
@@ -44,6 +46,18 @@ export default function Home() {
       count: stats.branch,
       icon: Building2,
       path: "/branch",
+    },
+    {
+      title: "Employees",
+      count: stats.employees,
+      icon: Building2,
+      path: "/employees",
+    },
+    {
+      title: "Students",
+      count: stats.students,
+      icon: Building2,
+      path: "/students",
     },
     {
       title: "Programs",
@@ -82,7 +96,7 @@ export default function Home() {
     <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {loading
         ? // 🦴 Skeleton loading cards
-          Array.from({ length: 6 }).map((_, index) => (
+          Array.from({ length: 9 }).map((_, index) => (
             <div
               key={index}
               className="animate-pulse bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 flex items-center justify-between"

@@ -88,7 +88,7 @@ export default function DepartmentAdd() {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="w-[10%] px-10" size="sm">
+              <Button className="w-[10%] px-10" size="sm">
                 Add
               </Button>
             </div>

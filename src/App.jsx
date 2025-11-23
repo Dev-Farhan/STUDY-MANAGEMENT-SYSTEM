@@ -37,6 +37,7 @@ import VideoClassEdit from "./pages/Study-Materials/video-classes/edit.jsx";
 import Students from "./pages/Students/index.jsx";
 import StudentAdd from "./pages/Students/add.jsx";
 import StudentEdit from "./pages/Students/edit.jsx";
+import Profile from "./pages/Profile/index.jsx";
 
 export default function App() {
   return (
@@ -56,6 +57,8 @@ export default function App() {
             }
           >
             <Route index path="/" element={<Home />} />
+
+            <Route index path="/profile" element={<Profile />} />
 
             {/* branch routes  */}
             <Route index path="/branch" element={<BranchList />} />
