@@ -30,7 +30,10 @@ export default function EmployeeEdit() {
       .email("Invalid email format")
       .required("Email is required"),
     gender: yup.string().required("Gender is required"),
-    department: yup.string().required("Department is required"),
+    department: yup
+      .mixed()
+      .transform((value) => (value === "" ? null : value))
+      .required("Department is required"),
     date_of_joining: yup.string().required("Date of joining is required"),
   });
   const genderOptions = [
@@ -58,6 +61,30 @@ export default function EmployeeEdit() {
     { value: "hr", label: "Human Resources" },
   ];
 
+  const [departments, setDepartments] = useState([]);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+  const fetchDepartments = async () => {
+    console.log("Fetching departments...");
+    try {
+      const { data, error } = await supabase.from("department").select("*");
+      if (error) {
+        console.error("Error fetching departments:", error);
+        return;
+      }
+
+      const transformedDepartments = data.map((dept) => ({
+        value: dept.id,
+        label: dept.department_name,
+      }));
+      setDepartments(data);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+    }
+  };
+
   useEffect(() => {
     if (id) {
       getEmployeeData(id.id);
@@ -71,11 +98,30 @@ export default function EmployeeEdit() {
       .eq("id", employeeId)
       .single();
 
+    const { data: deptData, error: deptError } = await supabase
+      .from("department")
+      .select("*")
+      .eq("id", data.department)
+      .single();
+    if (deptError) {
+      console.error("Error fetching department:", deptError);
+    }
+    const formattedData = {
+      ...data,
+      department: deptData
+        ? {
+            id: deptData.id,
+            value: deptData.department_name,
+            label: deptData.department_name,
+          }
+        : null,
+    };
+
     if (error) {
       console.error("Error fetching course:", error);
     } else {
-      setEmployeeData(data);
-      reset(data);
+      setEmployeeData(formattedData);
+      reset(formattedData);
     }
   };
 
@@ -88,7 +134,9 @@ export default function EmployeeEdit() {
         mobile_number: data.mobile_number,
         email: data.email,
         gender: data.gender,
-        department: data.department,
+        department: departments.find((dep) => dep.id === data.department.id)
+          ? data.department.id
+          : null,
         date_of_joining: data.date_of_joining,
         basic_salary: data.basic_salary,
         address: data.address,
@@ -207,21 +255,19 @@ export default function EmployeeEdit() {
             <Controller
               name="department"
               control={control}
-              render={({ field }) => {
-                const selectedOption =
-                  departmentOptions.find((o) => o.value === field.value) ||
-                  null;
-                return (
-                  <Select
-                    options={departmentOptions}
-                    value={selectedOption}
-                    onChange={(opt) => field.onChange(opt ? opt.value : "")}
-                    placeholder="Select Department"
-                    error={!!errors.department}
-                    hint={errors.department?.message}
-                  />
-                );
-              }}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={departments.map((dept) => ({
+                    value: dept.department_name,
+                    label: dept.department_name,
+                    id: dept.id,
+                  }))}
+                  placeholder="Select Department"
+                  error={!!errors.department}
+                  hint={errors.department?.message}
+                />
+              )}
             />
           </div>
 

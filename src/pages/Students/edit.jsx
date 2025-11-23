@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard.tsx";
@@ -5,12 +6,21 @@ import Button from "../../components/ui/button/Button.tsx";
 import Label from "../../components/form/Label.tsx";
 import Input from "../../components/form/input/InputField";
 import TextArea from "../../components/form/input/TextArea.tsx";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { toast } from "react-toastify";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Supabase from "../../config/supabaseClient.ts";
+import Select from "../../components/form/Select";
+import axios from "axios";
+import DynamicFields from "../../components/form/form-elements/DynamicFields.jsx";
+import { uploadImageToCloudinary } from "../../config/cloudinaryConfig";
+import { useDropzone } from "react-dropzone";
+import DatePicker from "../../components/form/date-picker.tsx";
+import DynamicFileUploader from "../../components/form/form-elements/FileInputExample.tsx";
+
+const API_KEY = import.meta.env.VITE_STATE_CITY_API_KEY;
 
 // Validation schema
 const schema = yup.object().shape({
@@ -19,7 +29,7 @@ const schema = yup.object().shape({
   mother_name: yup.string().required("Mother name is required"),
   gender: yup.string().required("Please select gender"),
   caste: yup.string().required("Please select caste"),
-  maritalStatus: yup.string().required("Please select marital status"),
+  marital_status: yup.string().required("Please select marital status"),
   mobile_number: yup
     .string()
     .required("Mobile number is required")
@@ -28,13 +38,13 @@ const schema = yup.object().shape({
     .string()
     .required("Parents contact is required")
     .matches(/^[0-9]{10}$/, "Enter a valid 10-digit number"),
-  email: yup.string().email("Enter valid email"),
-  dob_day: yup.string().required(),
-  dob_month: yup.string().required(),
-  dob_year: yup.string().required(),
+  state: yup.string().required("State is required"),
+  city: yup.string().required("City is required"),
+  email: yup.string().required("Enter valid email"),
   qualification: yup.string().required(),
   address: yup.string().required(),
   pincode: yup.string().required(),
+  student_image: yup.mixed().nullable(),
   course_code: yup.string().required("Course category is required"),
   course_name: yup.string().required("Course name is required"),
   net_fee: yup.string().required("Net fee is required"),
@@ -45,60 +55,294 @@ const schema = yup.object().shape({
   id_number: yup.string().required("Id number is required"),
 });
 
-export default function StudentAdd() {
-  const navigate = useNavigate();
+export default function StudentEdit() {
+  let navigate = useNavigate();
+  let id = useParams();
 
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [programs, setPrograms] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [studentData, setStudentData] = useState({});
+
+  // const {
+  //   control,
+  //   register,
+  //   handleSubmit,
+  //   reset,
+  //   watch,
+  //   formState: { errors },
+  // } = useForm({
+  //   resolver: yupResolver(schema),
+  // });
   const {
     control,
     register,
     handleSubmit,
-    setValue,
     reset,
+    watch,
+    setValue,
+    clearErrors,
     formState: { errors },
-  } = useForm({
-    resolver: yupResolver(schema),
-    defaultValues: {
-      description: "",
-    },
-  });
+  } = useForm({ resolver: yupResolver(schema) });
 
-  const onSubmit = async (formData) => {
-    try {
-      // Combine DOB fields into a single date string
-      formData.dob = `${formData.dob_year}-${formData.dob_month}-${formData.dob_day}`;
-      delete formData.dob_day;
-      delete formData.dob_month;
-      delete formData.dob_year;
+  const selectedState = watch("state");
 
-      // Handle photo upload
-      if (formData.photo && formData.photo.length > 0) {
-        const file = formData.photo[0];
-        const { data, error } = await Supabase.storage
-          .from("students")
-          .upload(`photos/${file.name}`, file);
+  // Option lists for selects that store string values in the form
+  const genderOptions = [
+    { value: "male", label: "Male" },
+    { value: "female", label: "Female" },
+    { value: "other", label: "Other" },
+  ];
 
+  const casteOptions = [
+    { value: "General", label: "General" },
+    { value: "OBC", label: "OBC" },
+    { value: "SC", label: "SC" },
+    { value: "ST", label: "ST" },
+    { value: "other", label: "Other" },
+  ];
+
+  const maritalOptions = [
+    { value: "Single", label: "Single" },
+    { value: "Married", label: "Married" },
+    { value: "Divorced", label: "Divorced" },
+    { value: "Widowed", label: "Widowed" },
+  ];
+
+  const idCardOptions = [
+    { value: "aadhar", label: "Aadhar Card" },
+    { value: "passport", label: "Passport" },
+    { value: "driving_license", label: "Driving License" },
+    { value: "voter_id", label: "Voter ID" },
+    { value: "electricity_bill", label: "Electricity Bill" },
+  ];
+
+  const qualificationOptions = [
+    { value: "10th", label: "10th" },
+    { value: "12th", label: "12th" },
+    { value: "Diploma", label: "Diploma" },
+    { value: "Graduate", label: "Graduate" },
+    { value: "Post Graduate", label: "Post Graduate" },
+    { value: "Phd", label: "Phd" },
+    { value: "Other", label: "Other" },
+  ];
+
+  // 🏙️ Get all states (on load)
+  useEffect(() => {
+    if (id) {
+      getStudentData(id.id);
+    }
+    fetchData();
+    // fetch programs + courses for course selects
+    (async function fetchPrograms() {
+      try {
+        const { data, error } = await Supabase.from("programs").select(
+          "*, courses(*)"
+        );
         if (error) {
-          toast.error(error.message);
+          console.error("Failed to load programs:", error.message || error);
           return;
         }
-        formData.photo_url = data.path;
+        setPrograms(data || []);
+      } catch (err) {
+        console.error("Unexpected error loading programs:", err);
       }
+    })();
+  }, [id]);
 
-      // Insert into Supabase
-      const { data, error } = await Supabase.from("student")
-        .insert([formData])
-        .select();
+  // 🏘️ Get cities when a state is selected (selectedState is stored as the state's value string)
+  useEffect(() => {
+    if (selectedState) {
+      fetchCities(selectedState).then((citiesList) => {
+        setCities(citiesList);
+      });
+    } else {
+      setCities([]);
+    }
+  }, [selectedState]);
+
+  const fetchData = async () => {
+    var config = {
+      method: "get",
+      url: "https://api.countrystatecity.in/v1/countries/IN/states",
+      headers: {
+        "X-CSCAPI-KEY": API_KEY,
+      },
+    };
+
+    try {
+      const response = await axios(config);
+      // const data = response?.data;
+      const formattedStates = response?.data.map((state) => ({
+        value: state.iso2,
+        label: state.name,
+      }));
+      setStates(formattedStates);
+      // console.log("✅ Data received:", response.data);
+    } catch (error) {
+      console.error("❌ Error fetching data:", error.message || error);
+    }
+  };
+
+  const fetchCities = async (stateCode) => {
+    if (!stateCode) return [];
+
+    try {
+      const response = await axios.get(
+        `https://api.countrystatecity.in/v1/countries/IN/states/${stateCode}/cities`,
+        {
+          headers: {
+            "X-CSCAPI-KEY": API_KEY,
+          },
+        }
+      );
+
+      return response.data.map((city) => ({
+        label: city.name,
+        value: city.name,
+      }));
+    } catch (error) {
+      console.error("❌ City fetch error:", error.message);
+      return [];
+    }
+  };
+
+  const getStudentData = async (studentId) => {
+    try {
+      const { data, error } = await Supabase.from("students")
+        .select("*")
+        .eq("id", studentId)
+        .single();
+
       if (error) {
-        toast.error(error.message);
+        console.error("Error fetching student:", error);
+        toast.error("Failed to load student data");
         return;
       }
 
-      reset();
-      toast.success("Student added successfully!");
-      navigate("/student");
+      setStudentData(data);
+      reset(data);
+
+      // If student has a program, load the courses for that program
+      if (data.program_id) {
+        const program = programs.find(
+          (p) => String(p.id) === String(data.program_id)
+        );
+        if (program) {
+          setFilteredCourses(program.courses || []);
+        }
+      }
     } catch (err) {
-      console.error(err);
-      toast.error(err?.message || "Something went wrong");
+      console.error("Unexpected error fetching student:", err);
+      toast.error("Failed to load student data");
+    }
+  };
+
+  // Handle image upload with dropzone
+  const onDrop = (acceptedFiles) => {
+    if (acceptedFiles.length > 0) {
+      const file = acceptedFiles[0];
+      setSelectedImage(file);
+      setValue("student_image", file);
+      clearErrors("student_image");
+
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    }
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "image/png": [],
+      "image/jpeg": [],
+      "image/jpg": [],
+      "image/webp": [],
+      "image/svg+xml": [],
+    },
+    maxFiles: 1,
+    maxSize: 5 * 1024 * 1024, // 5MB
+  });
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setValue("student_image", null);
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+  };
+
+  // Cleanup image preview URL on component unmount
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
+  const [selectedFile, setSelectedFile] = useState(null);
+  const onSubmit = async (formData) => {
+    toast.dismiss();
+
+    try {
+      // Filter to only include valid student columns
+      const validColumns = {
+        student_name: formData.student_name,
+        father_name: formData.father_name,
+        mother_name: formData.mother_name,
+        gender: formData.gender,
+        caste: formData.caste,
+        marital_status: formData.marital_status,
+        mobile_number: formData.mobile_number,
+        parents_contact: formData.parents_number,
+        identity_type: formData.idCardType,
+        identity_number: formData.id_number,
+        last_qualification: formData.qualification,
+        address: formData.address,
+        pincode: formData.pincode,
+        state: formData.state,
+        city: formData.city,
+        email: formData.email,
+        dob: formData.dob,
+        program_id: formData.course_code,
+        course_id: formData.course_name,
+        net_fee: formData.net_fee,
+        discount: formData.discount,
+        inquiry_source: formData.inquiry_source,
+      };
+
+      // Remove undefined fields so we don't send accidental values (like event objects)
+      const payload = Object.keys(validColumns).reduce((acc, key) => {
+        if (typeof validColumns[key] !== "undefined")
+          acc[key] = validColumns[key];
+        return acc;
+      }, {});
+
+      const response = await Supabase.from("students")
+        .update(payload)
+        .eq("id", id.id);
+
+      // Log the response for debugging
+      console.debug("Supabase update response:", response);
+
+      if (response.error) {
+        console.error("Update error:", response.error);
+        toast.error(response.error.message || "Failed to update student");
+        return;
+      }
+
+      toast.success("Student updated successfully!");
+      navigate("/students");
+    } catch (error) {
+      console.error("Error updating student:", error);
+      toast.error("Failed to update student. Please try again.");
     }
   };
 
@@ -108,7 +352,7 @@ export default function StudentAdd() {
         title="Add Student | Dashboard"
         description="Add new student details"
       />
-      <PageBreadcrumb pageTitle="Student Add" />
+      <PageBreadcrumb pageTitle="Student Edit" />
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-1">
         <ComponentCard title="Personal Details">
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -125,7 +369,6 @@ export default function StudentAdd() {
                   placeholder="Enter student name"
                 />
               </div>
-
               {/* Father Name */}
               <div>
                 <Label htmlFor="father_name">Father Name</Label>
@@ -138,7 +381,6 @@ export default function StudentAdd() {
                   placeholder="Enter father name"
                 />
               </div>
-
               {/* Mother Name */}
               <div>
                 <Label htmlFor="mother_name">Mother Name</Label>
@@ -151,118 +393,74 @@ export default function StudentAdd() {
                   placeholder="Enter mother name"
                 />
               </div>
-
               {/* Gender */}
               <div>
                 <Label htmlFor="gender">Gender</Label>
-                <select
-                  id="gender"
-                  {...register("gender")}
-                  className="h-11 w-full rounded-lg border px-3 text-sm text-gray-400 focus:outline-none"
-                >
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-                {errors.gender && (
-                  <p className="text-red-500 text-sm">
-                    {errors.gender.message}
-                  </p>
-                )}
+                <Controller
+                  name="gender"
+                  control={control}
+                  render={({ field }) => {
+                    const selectedOption =
+                      genderOptions.find((o) => o.value === field.value) ||
+                      null;
+                    return (
+                      <Select
+                        options={genderOptions}
+                        value={selectedOption}
+                        onChange={(opt) => field.onChange(opt ? opt.value : "")}
+                        placeholder="Select Gender"
+                        error={!!errors.gender}
+                        hint={errors.gender?.message}
+                      />
+                    );
+                  }}
+                />
               </div>
-
-              {/* DOB */}
-              <div>
-                <Label htmlFor="dob">Date of Birth</Label>
-                <div className="flex gap-2">
-                  <select
-                    id="dob_day"
-                    {...register("dob_day")}
-                    className="h-11 w-1/3 rounded-lg border px-3 text-sm text-gray-400"
-                  >
-                    <option value="">Day</option>
-                    {[...Array(31)].map((_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {i + 1}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    id="dob_month"
-                    {...register("dob_month")}
-                    className="h-11 w-1/3 rounded-lg border px-3 text-sm text-gray-400"
-                  >
-                    <option value="">Month</option>
-                    {[
-                      "Jan",
-                      "Feb",
-                      "Mar",
-                      "Apr",
-                      "May",
-                      "Jun",
-                      "Jul",
-                      "Aug",
-                      "Sep",
-                      "Oct",
-                      "Nov",
-                      "Dec",
-                    ].map((month) => (
-                      <option key={month} value={month}>
-                        {month}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    id="dob_year"
-                    {...register("dob_year")}
-                    className="h-11 w-1/3 rounded-lg border px-3 text-sm text-gray-400"
-                  >
-                    <option value="">Year</option>
-                    {Array.from({ length: 50 }, (_, i) => 2025 - i).map(
-                      (year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      )
-                    )}
-                  </select>
-                </div>
-              </div>
-
               {/* Caste */}
               <div>
                 <Label htmlFor="caste">Caste</Label>
-                <select
-                  id="caste"
-                  {...register("caste")}
-                  className="h-11 w-full rounded-lg border px-3 text-sm text-gray-400"
-                >
-                  <option value="">Select Caste</option>
-                  <option value="General">General</option>
-                  <option value="OBC">OBC</option>
-                  <option value="SC">SC</option>
-                  <option value="ST">ST</option>
-                  <option value="Other">Other</option>
-                </select>
+                <Controller
+                  name="caste"
+                  control={control}
+                  render={({ field }) => {
+                    const selectedOption =
+                      casteOptions.find((o) => o.value === field.value) || null;
+                    return (
+                      <Select
+                        options={casteOptions}
+                        value={selectedOption}
+                        onChange={(opt) => field.onChange(opt ? opt.value : "")}
+                        placeholder="Select Caste"
+                        error={!!errors.caste}
+                        hint={errors.caste?.message}
+                      />
+                    );
+                  }}
+                />
               </div>
-
               {/* Marital Status */}
               <div>
-                <Label htmlFor="maritalStatus">Marital Status</Label>
-                <select
-                  id="maritalStatus"
-                  {...register("maritalStatus")}
-                  className="h-11 w-full rounded-lg border px-3 text-sm text-gray-400"
-                >
-                  <option value="">Select Status</option>
-                  <option value="Single">Single</option>
-                  <option value="Married">Married</option>
-                  <option value="Divorced">Divorced</option>
-                  <option value="Widowed">Widowed</option>
-                </select>
+                <Label htmlFor="marital_status">Marital Status</Label>
+                <Controller
+                  name="marital_status"
+                  control={control}
+                  render={({ field }) => {
+                    const selectedOption =
+                      maritalOptions.find((o) => o.value === field.value) ||
+                      null;
+                    return (
+                      <Select
+                        options={maritalOptions}
+                        value={selectedOption}
+                        onChange={(opt) => field.onChange(opt ? opt.value : "")}
+                        placeholder="Select Marital Status"
+                        error={!!errors.marital_status}
+                        hint={errors.marital_status?.message}
+                      />
+                    );
+                  }}
+                />
               </div>
-
               {/* Mobile Number */}
               <div>
                 <Label htmlFor="mobile_number">Mobile Number</Label>
@@ -275,7 +473,6 @@ export default function StudentAdd() {
                   placeholder="Enter mobile number"
                 />
               </div>
-
               {/* Parents Number */}
               <div>
                 <Label htmlFor="parents_number">Parents Contact</Label>
@@ -288,22 +485,29 @@ export default function StudentAdd() {
                   placeholder="Enter parents contact"
                 />
               </div>
-
               {/* Identity Type */}
               <div>
                 <Label htmlFor="idCardType">Identity Type</Label>
-                <select
-                  id="idCardType"
-                  {...register("idCardType")}
-                  className="h-11 w-full rounded-lg border px-3 text-sm text-gray-400"
-                >
-                  <option value="">Select</option>
-                  <option value="Adhar card">Adhar card</option>
-                  <option value="Voter Id">Voter Id</option>
-                  <option value="Other">Other</option>
-                </select>
+                <Controller
+                  name="idCardType"
+                  control={control}
+                  render={({ field }) => {
+                    const selectedOption =
+                      idCardOptions.find((o) => o.value === field.value) ||
+                      null;
+                    return (
+                      <Select
+                        options={idCardOptions}
+                        value={selectedOption}
+                        onChange={(opt) => field.onChange(opt ? opt.value : "")}
+                        placeholder="Select Id Proof Type"
+                        error={!!errors.idCardType}
+                        hint={errors.idCardType?.message}
+                      />
+                    );
+                  }}
+                />
               </div>
-
               {/* ID Number */}
               <div>
                 <Label htmlFor="id_number">ID Number</Label>
@@ -316,26 +520,30 @@ export default function StudentAdd() {
                   placeholder="Enter ID number"
                 />
               </div>
-
               {/* Qualification */}
               <div>
                 <Label htmlFor="qualification">Last Qualification</Label>
-                <select
-                  id="qualification"
-                  {...register("qualification")}
-                  className="h-11 w-full rounded-lg border px-3 text-sm text-gray-400"
-                >
-                  <option value="">Select Qualification</option>
-                  <option value="High School">10th</option>
-                  <option value="Intermediate">12th</option>
-                  <option value="Diploma">Diploma</option>
-                  <option value="Graduate">Graduate</option>
-                  <option value="Post Graduate">Post Graduate</option>
-                  <option value="PhD">PhD</option>
-                  <option value="Other">Other</option>
-                </select>
+                <Controller
+                  name="qualification"
+                  control={control}
+                  render={({ field }) => {
+                    const selectedOption =
+                      qualificationOptions.find(
+                        (o) => o.value === field.value
+                      ) || null;
+                    return (
+                      <Select
+                        options={qualificationOptions}
+                        value={selectedOption}
+                        onChange={(opt) => field.onChange(opt ? opt.value : "")}
+                        placeholder="Last Qualification"
+                        error={!!errors.qualification}
+                        hint={errors.qualification?.message}
+                      />
+                    );
+                  }}
+                />
               </div>
-
               {/* Address */}
               <div>
                 <Label htmlFor="address">Address</Label>
@@ -348,7 +556,6 @@ export default function StudentAdd() {
                   placeholder="Enter address"
                 />
               </div>
-
               {/* Pincode */}
               <div>
                 <Label htmlFor="pincode">Pincode</Label>
@@ -361,12 +568,65 @@ export default function StudentAdd() {
                   placeholder="Enter pincode"
                 />
               </div>
-
+              {/* State */}
+              <div>
+                <Label htmlFor="state">Select State</Label>
+                <Controller
+                  name="state"
+                  control={control}
+                  rules={{ required: "State is required" }}
+                  render={({ field }) => {
+                    const selectedOption =
+                      states.find((o) => o.value === field.value) || null;
+                    return (
+                      <Select
+                        options={states}
+                        value={selectedOption}
+                        onChange={(opt) => {
+                          // store the state's value (string) and clear city
+                          field.onChange(opt ? opt.value : "");
+                          setValue("city", "");
+                        }}
+                        placeholder="Select State"
+                        error={!!errors.state}
+                        hint={errors.state?.message}
+                      />
+                    );
+                  }}
+                />
+              </div>
+              <div>
+                <Label htmlFor="city">Select City</Label>
+                <Controller
+                  name="city"
+                  control={control}
+                  rules={{ required: "City field is required" }}
+                  render={({ field }) => {
+                    const selectedOption =
+                      cities.find((o) => o.value === field.value) || null;
+                    return (
+                      <Select
+                        options={cities}
+                        value={selectedOption}
+                        onChange={(opt) => field.onChange(opt ? opt.value : "")}
+                        placeholder={
+                          selectedState
+                            ? "Select City"
+                            : "Please select state first"
+                        }
+                        isDisabled={!selectedState}
+                        error={!!errors.city}
+                        hint={errors.city?.message}
+                      />
+                    );
+                  }}
+                />
+              </div>
               {/* Email */}
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
-                  type="text"
+                  type="email"
                   id="email"
                   {...register("email")}
                   error={!!errors.email}
@@ -374,62 +634,137 @@ export default function StudentAdd() {
                   placeholder="Enter email"
                 />
               </div>
-
-              {/* Photo */}
+              {/* Date of Birth */}
               <div>
-                <Label htmlFor="photo">Student Photo</Label>
-                <input
-                  type="file"
-                  id="photo"
-                  accept="image/*"
-                  {...register("photo")}
-                  onChange={(e) => setValue("photo", e.target.files)}
-                  className="h-11 w-full rounded-lg border px-3 text-sm text-gray-400 file:rounded-lg file:border-0 file:bg-brand-500 file:text-white cursor-pointer"
-                />
-              </div>
-
-              {/* Description */}
-              <div className="md:col-span-2">
                 <Controller
-                  name="description"
+                  name="dob"
                   control={control}
-                  defaultValue=""
                   render={({ field }) => (
-                    <TextArea
-                      {...field}
-                      rows={6}
-                      placeholder="Enter description"
-                      error={!!errors.description}
-                      hint={errors.description?.message}
+                    <DatePicker
+                      id="date-picker"
+                      label="Date of Birth"
+                      placeholder="Select Date of Birth"
+                      defaultDate={field.value || undefined}
+                      onChange={(dates, dateStr) => {
+                        // store date as string (YYYY-MM-DD)
+                        field.onChange(dateStr);
+                      }}
                     />
                   )}
                 />
               </div>
+              {/* Photo */}
+              <div>
+                <Label htmlFor="input">Upload Image</Label>
+                {/* <DynamicFileUploader /> */}
+                <Controller
+                  name="file_url"
+                  control={control}
+                  render={({ field }) => (
+                    <DynamicFileUploader
+                      onFileSelect={(file) => setSelectedFile(file)} // ✅ Pass file to local state
+                    />
+                  )}
+                />
+                {errors.file_url && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.file_url.message}
+                  </p>
+                )}
+              </div>
             </div>
+
+            {/* Description */}
 
             {/* Course Details */}
             <ComponentCard title="Course Details" className="mt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="course_code">Course Category</Label>
-                  <Input
-                    type="text"
-                    id="course_code"
-                    {...register("course_code")}
-                    error={!!errors.course_code}
-                    hint={errors.course_code?.message}
-                    placeholder="Enter course category"
+                  <Controller
+                    name="course_code"
+                    control={control}
+                    render={({ field }) => {
+                      const selectedOption = programs.find(
+                        (p) => String(p.id) === String(field.value)
+                      )
+                        ? {
+                            value: field.value,
+                            label: programs.find(
+                              (p) => String(p.id) === String(field.value)
+                            ).program_name,
+                          }
+                        : null;
+                      return (
+                        <Select
+                          options={programs.map((program) => ({
+                            value: String(program.id),
+                            label: program.program_name,
+                            id: program.id,
+                          }))}
+                          value={selectedOption}
+                          onChange={(opt) => {
+                            // store program id as string in form
+                            const programId = opt ? String(opt.value) : "";
+                            field.onChange(programId);
+                            // update filtered courses for selected program
+                            const selectedProgram = programs.find(
+                              (p) => String(p.id) === String(programId)
+                            );
+                            setFilteredCourses(selectedProgram?.courses || []);
+                            // clear selected course name
+                            setValue("course_name", "");
+                          }}
+                          placeholder={
+                            programs.length
+                              ? "Select Program"
+                              : "Loading programs..."
+                          }
+                          error={!!errors.course_code}
+                          hint={errors.course_code?.message}
+                        />
+                      );
+                    }}
                   />
                 </div>
                 <div>
                   <Label htmlFor="course_name">Course Name</Label>
-                  <Input
-                    type="text"
-                    id="course_name"
-                    {...register("course_name")}
-                    error={!!errors.course_name}
-                    hint={errors.course_name?.message}
-                    placeholder="Enter course name"
+                  <Controller
+                    name="course_name"
+                    control={control}
+                    render={({ field }) => {
+                      const selectedOption = filteredCourses.find(
+                        (c) => String(c.id) === String(field.value)
+                      )
+                        ? {
+                            value: field.value,
+                            label: filteredCourses.find(
+                              (c) => String(c.id) === String(field.value)
+                            ).course_name,
+                          }
+                        : null;
+                      return (
+                        <Select
+                          options={filteredCourses.map((course) => ({
+                            value: String(course.id),
+                            label: course.course_name,
+                            id: course.id,
+                          }))}
+                          value={selectedOption}
+                          onChange={(opt) =>
+                            field.onChange(opt ? String(opt.value) : "")
+                          }
+                          placeholder={
+                            filteredCourses.length
+                              ? "Select Course"
+                              : "Select a Program first"
+                          }
+                          isDisabled={!filteredCourses.length}
+                          error={!!errors.course_name}
+                          hint={errors.course_name?.message}
+                        />
+                      );
+                    }}
                   />
                 </div>
                 <div>
@@ -490,7 +825,7 @@ export default function StudentAdd() {
                 Cancel
               </Button>
               <Button type="submit" className="w-[10%] px-10" size="sm">
-                Add
+                Edit
               </Button>
             </div>
           </form>

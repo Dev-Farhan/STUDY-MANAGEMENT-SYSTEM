@@ -20,7 +20,7 @@ const EmployeeList = () => {
 
   const columns = [
     { key: "employee_name", label: "Employee Name" },
-    { key: "department", label: "Department" },
+    { key: "department_name", label: "Department" },
     { key: "mobile_number", label: "Mobile Number" },
     {
       key: "isActive",
@@ -50,8 +50,13 @@ const EmployeeList = () => {
 
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  let paginatedData = employeesData.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(employeesData.length / rowsPerPage);
+  const formattedEmployees = employeesData.map((emp) => ({
+    ...emp, // keep existing fields like id, isActive
+    employee_name: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
+    department_name: emp.department?.department_name || "N/A",
+  }));
+  let paginatedData = formattedEmployees.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(formattedEmployees.length / rowsPerPage);
 
   // Debounced fetch function
   const fetchCourses = async (query) => {
@@ -112,21 +117,16 @@ const EmployeeList = () => {
   const getEmployees = async () => {
     try {
       setIsLoading(true);
-      let { data: employees, error } = await Supabase.from("employees").select(
-        "*"
-      );
+      let { data: employees, error } = await Supabase.from("employees").select(`
+        *,
+        department(id, department_name)`);
       if (error) {
         toast.error(error?.message);
         console.error("Employees List Error:", error.message);
         return;
       }
-      const mapped = (employees || []).map((r) => ({
-        ...r,
-        employee_name: `${r.first_name || ""} ${r.last_name || ""}`.trim(),
-        department:
-          r.department?.replace(/^./, (char) => char.toUpperCase()) || "N/A",
-      }));
-      setEmployeesData(mapped);
+
+      setEmployeesData(employees);
       setIsLoading(false);
     } catch (err) {
       toast.error(err?.message || "Something went wrong");

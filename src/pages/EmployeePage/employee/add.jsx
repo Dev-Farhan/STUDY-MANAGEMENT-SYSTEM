@@ -12,6 +12,7 @@ import Button from "../../../components/ui/button/Button";
 import { toast } from "react-toastify";
 import supabase from "../../../config/supabaseClient";
 import { useNavigate } from "react-router";
+import { useEffect, useState } from "react";
 
 export default function EmployeeAdd() {
   let navigate = useNavigate();
@@ -27,7 +28,10 @@ export default function EmployeeAdd() {
       .email("Invalid email format")
       .required("Email is required"),
     gender: yup.string().required("Gender is required"),
-    department: yup.string().required("Department is required"),
+    department: yup
+      .mixed()
+      .transform((value) => (value === "" ? null : value))
+      .required("Department is required"),
     date_of_joining: yup.string().required("Date of joining is required"),
   });
   const genderOptions = [
@@ -54,10 +58,36 @@ export default function EmployeeAdd() {
     { value: "sales", label: "Sales" },
     { value: "hr", label: "Human Resources" },
   ];
+  const [departments, setDepartments] = useState([]);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+  const fetchDepartments = async () => {
+    console.log("Fetching departments...");
+    try {
+      const { data, error } = await supabase.from("department").select("*");
+      if (error) {
+        console.error("Error fetching departments:", error);
+        return;
+      }
+
+      const transformedDepartments = data.map((dept) => ({
+        value: dept.id,
+        label: dept.department_name,
+      }));
+      setDepartments(data);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+    }
+  };
 
   onsubmit = async (data) => {
     try {
-      const response = await supabase.from("employees").insert(data);
+      // console.log(data);
+      const payload = { ...data, department: data.department.id };
+      // console.log("Payload:", payload);
+      const response = await supabase.from("employees").insert(payload);
       if (response.error) {
         throw response.error;
       }
@@ -154,21 +184,19 @@ export default function EmployeeAdd() {
             <Controller
               name="department"
               control={control}
-              render={({ field }) => {
-                const selectedOption =
-                  departmentOptions.find((o) => o.value === field.value) ||
-                  null;
-                return (
-                  <Select
-                    options={departmentOptions}
-                    value={selectedOption}
-                    onChange={(opt) => field.onChange(opt ? opt.value : "")}
-                    placeholder="Select Department"
-                    error={!!errors.department}
-                    hint={errors.department?.message}
-                  />
-                );
-              }}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={departments.map((dept) => ({
+                    value: dept.department_name,
+                    label: dept.department_name,
+                    id: dept.id,
+                  }))}
+                  placeholder="Select Department"
+                  error={!!errors.department}
+                  hint={errors.department?.message}
+                />
+              )}
             />
           </div>
 
