@@ -14,9 +14,7 @@ import Label from "@components/form/Label.tsx";
 import Input from "@components/form/input/InputField";
 import Select from "../../components/form/Select";
 import axios from "axios";
-import { useDropzone } from "react-dropzone";
-import { uploadImageToCloudinary } from "../../config/cloudinaryConfig";
-// import { uploadImageToCloudinary } from "../../../config/cloudinaryConfig";
+import DynamicFileUploader from "../../components/form/form-elements/FileInputExample";
 
 const API_KEY = import.meta.env.VITE_STATE_CITY_API_KEY;
 
@@ -171,8 +169,8 @@ export default function BranchEdit() {
 
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [existingFile, setExistingFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [branchData, setBranchData] = useState({});
 
@@ -257,54 +255,13 @@ export default function BranchEdit() {
 
     // Set image preview if exists
     if (data.logo_url) {
-      setImagePreview(data.logo_url);
+      setExistingFile({
+        name: "Existing Logo",
+        url: data.logo_url,
+      });
     }
   };
 
-  // Handle image upload with dropzone
-  const onDrop = (acceptedFiles) => {
-    if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      setSelectedImage(file);
-      setValue("logo_url", file);
-      clearErrors("logo_url");
-
-      // Create preview URL
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-    }
-  };
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      "image/png": [],
-      "image/jpeg": [],
-      "image/jpg": [],
-      "image/webp": [],
-      "image/svg+xml": [],
-    },
-    maxFiles: 1,
-    maxSize: 5 * 1024 * 1024, // 5MB
-  });
-
-  const removeImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-    setValue("logo_url", null);
-    if (imagePreview) {
-      URL.revokeObjectURL(imagePreview);
-    }
-  };
-
-  // Cleanup image preview URL on component unmount
-  useEffect(() => {
-    return () => {
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview);
-      }
-    };
-  }, [imagePreview]);
 
   // 🏙️ Get all states (on load)
   useEffect(() => {
@@ -373,19 +330,35 @@ export default function BranchEdit() {
       setIsUploading(true);
       let logoUrl = null;
 
-      // If an image is selected, upload it to Cloudinary first
-      if (selectedImage) {
-        toast.info("Uploading image to Cloudinary...");
+      // If an image is selected, upload it to Supabase Storage first
+      if (selectedFile) {
+        toast.info("Uploading image...");
 
-        const uploadResult = await uploadImageToCloudinary(selectedImage);
-
-        if (!uploadResult.success) {
-          toast.error(`Image upload failed: ${uploadResult.error}`);
-          setIsUploading(false);
-          return;
+        // 1. Delete existing image if it exists and is a Supabase URL
+        if (branchData.logo_url && branchData.logo_url.includes("logo")) {
+          const oldFilePath = branchData.logo_url.split("/logo/")[1];
+          if (oldFilePath) {
+             await Supabase.storage.from("logo").remove([oldFilePath]);
+          }
         }
 
-        logoUrl = uploadResult.url;
+        // 2. Upload new image
+        const fileName = `${Date.now()}_${selectedFile.name}`;
+        const filePath = `branch_logos/${fileName}`;
+        
+        const { error: uploadError } = await Supabase.storage
+          .from("logo")
+          .upload(filePath, selectedFile);
+
+        if (uploadError) {
+          throw new Error(`Image upload failed: ${uploadError.message}`);
+        }
+
+        const { data: publicUrlData } = Supabase.storage
+          .from("logo")
+          .getPublicUrl(filePath);
+          
+        logoUrl = publicUrlData.publicUrl;
         toast.success("Image uploaded successfully!");
       }
 
@@ -428,7 +401,8 @@ export default function BranchEdit() {
       }
 
       reset(); // clear form fields
-      removeImage(); // clear image
+      setSelectedFile(null);
+      setExistingFile(null);
       setIsUploading(false);
       toast.success("Branch updated successfully!");
       navigate("/branch");
@@ -678,107 +652,32 @@ export default function BranchEdit() {
                   placeholder={`Enter ID number`}
                 />
               </div>
-              <div className="md:col-span-3">
+              
+              <div className="">
                 <Label>Center Logo</Label>
                 <div className="mt-2">
-                  {!selectedImage && !imagePreview ? (
-                    <div
-                      className={`transition border-2 ${
-                        errors.logo_url
-                          ? "border-red-500"
-                          : "border-gray-300 dark:border-gray-700"
-                      } border-dashed cursor-pointer hover:border-brand-500 dark:hover:border-brand-500 rounded-xl`}
-                    >
-                      <div
-                        {...getRootProps()}
-                        className={`dropzone rounded-xl p-7 lg:p-10 ${
-                          isDragActive
-                            ? "bg-gray-100 dark:bg-gray-800"
-                            : "bg-gray-50 dark:bg-gray-900"
-                        }`}
-                      >
-                        <input {...getInputProps()} />
-                        <div className="dz-message flex flex-col items-center m-0">
-                          <div className="mb-6 flex justify-center">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 text-brand-500 dark:bg-gray-800 dark:text-brand-400">
-                              <svg
-                                className="h-8 w-8"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                />
-                              </svg>
-                            </div>
-                          </div>
-
-                          <h4 className="mb-2 text-lg font-semibold text-gray-800 dark:text-white/90">
-                            {isDragActive
-                              ? "Drop logo here"
-                              : "Upload Center Logo"}
-                          </h4>
-
-                          <p className="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
-                            Drag and drop your logo here or click to browse
-                          </p>
-
-                          <p className="text-xs text-gray-500 dark:text-gray-500">
-                            Supported formats: PNG, JPG, WebP, SVG (Max 5MB)
-                          </p>
-
-                          <button
-                            type="button"
-                            className="mt-4 px-4 py-2 text-sm font-medium text-brand-500 bg-brand-50 rounded-lg hover:bg-brand-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
-                          >
-                            Select File
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="relative group">
-                      <div className="aspect-video w-full max-w-sm overflow-hidden rounded-xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-gray-900">
-                        <img
-                          src={imagePreview}
-                          alt="Center logo preview"
-                          className="h-full w-full object-contain p-4"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-colors hover:bg-red-600"
-                      >
-                        <svg
-                          className="h-5 w-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                      {selectedImage && (
-                        <div className="mt-2 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-                          <span className="truncate">{selectedImage.name}</span>
-                          <span>
-                            {(selectedImage.size / 1024 / 1024).toFixed(2)} MB
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  <DynamicFileUploader
+                    onFileSelect={(file) => {
+                      setSelectedFile(file);
+                      setValue("logo_url", file);
+                      clearErrors("logo_url");
+                    }}
+                    existingFile={
+                      selectedFile
+                        ? {
+                            name: selectedFile.name,
+                            url: URL.createObjectURL(selectedFile),
+                          }
+                        : existingFile
+                    }
+                    allowedTypes={[
+                      "image/jpeg",
+                      "image/png",
+                      "image/webp",
+                      "image/svg+xml",
+                    ]}
+                    maxSizeMB={5}
+                  />
                   {errors.logo_url && (
                     <p className="mt-2 text-sm font-medium text-red-600 dark:text-red-400">
                       {errors.logo_url.message}
